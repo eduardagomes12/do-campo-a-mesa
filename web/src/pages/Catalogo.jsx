@@ -15,18 +15,37 @@ export default function Catalogo() {
   const carrinho = useCarrinho();
   const { utilizador } = useAuth();
 
+  
   useEffect(() => {
     if (USAR_DADOS_SIMULADOS) {
-      // Semana 2: filtragem local sobre dados simulados
       setProdutos(produtosSimulados.filter((p) =>
         (filtro.categoria === 'Todos' || p.categoria === filtro.categoria) &&
         (!filtro.bio || p.biologico) &&
-        p.nome.toLowerCase().includes(filtro.q.toLowerCase())));
-      return;
+        p.nome.toLowerCase().includes(filtro.q.toLowerCase())
+      ));
+      setErro('');
+      return undefined;
     }
-    const q = new URLSearchParams(filtro);
-    api(`/products?${q}`).then(setProdutos).catch((e) => setErro(e.message));
+
+    // Espera 300 ms depois da última alteração
+    const t = setTimeout(() => {
+      const q = new URLSearchParams(
+        Object.entries(filtro).filter(
+          ([, v]) => v !== '' && v !== false
+        )
+      );
+
+      api(`/products?${q}`)
+        .then((dados) => {
+          setProdutos(dados);
+          setErro('');
+        })
+        .catch((e) => setErro(e.message));
+    }, 300);
+
+    return () => clearTimeout(t);
   }, [filtro]);
+
 
   const mudar = (campo) => (e) =>
     setFiltro((f) => ({ ...f, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
