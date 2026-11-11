@@ -16,10 +16,17 @@ import PainelAdmin from './pages/admin/Painel.jsx';
 import NaoEncontrado from './pages/NaoEncontrado.jsx';
 
 export default function App() {
+  
   return (
     <>
+      <a href="#conteudo" className="visually-hidden-focusable">
+        Saltar para o conteúdo
+      </a>
+
       <Navbar />
-      <main className="container-xl py-4">
+
+      <main id="conteudo" className="container-xl py-4">
+
         <Routes>
           {/* Visitante */}
           <Route path="/" element={<Catalogo />} />
