@@ -12,6 +12,7 @@ import Login from './pages/Login.jsx';
 import Registo from './pages/Registo.jsx';
 import PainelProdutor from './pages/produtor/Painel.jsx';
 import NovoLeilao from './pages/produtor/NovoLeilao.jsx';
+import ProdutosProdutor from './pages/produtor/Produtos.jsx';
 import PainelAdmin from './pages/admin/Painel.jsx';
 import NaoEncontrado from './pages/NaoEncontrado.jsx';
 
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registo" element={<Registo />} />
 
+
           {/* Comprador */}
           
           {/* Qualquer utilizador autenticado pode assistir */}
@@ -48,12 +50,22 @@ export default function App() {
             <Route path="/encomendas" element={<Encomendas />} />
           </Route>
 
-
           {/* Produtor */}
           <Route element={<RotaProtegida papeis={['produtor']} />}>
-            <Route path="/produtor" element={<PainelProdutor />} />
-            <Route path="/produtor/leiloes/novo" element={<NovoLeilao />} />
+            <Route
+              path="/produtor"
+              element={<PainelProdutor />}
+            />
+            <Route
+              path="/produtor/produtos"
+              element={<ProdutosProdutor />}
+            />
+            <Route
+              path="/produtor/leiloes/novo"
+              element={<NovoLeilao />}
+            />
           </Route>
+
 
           {/* Administrador */}
           <Route element={<RotaProtegida papeis={['admin']} />}>

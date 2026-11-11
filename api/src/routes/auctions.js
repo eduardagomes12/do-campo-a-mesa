@@ -1,7 +1,6 @@
 // Leilões (a parte REST; as licitações em direto são feitas por Socket.io)
 const router = require('express').Router();
 const auth = require('../middleware/auth');
-const porFazer = require('./_naoImplementado');
 const Auction = require('../models/Auction');
 const a = require('../utils/async');
 const Bid = require('../models/Bid');
