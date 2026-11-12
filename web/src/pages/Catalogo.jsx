@@ -25,17 +25,23 @@ const EPOCAS = [
   'Inverno'
 ];
 
+
 const FILTRO_INICIAL = {
   q: '',
   categoria: 'Todos',
   bio: false,
   epoca: '',
   precoMax: '',
+  produtor: '',
+  localidade: '',
   ordenar: 'recentes'
 };
 
+
 export default function Catalogo() {
   const [produtos, setProdutos] = useState([]);
+  const [produtores, setProdutores] = useState([]);
+  const [erroProdutores, setErroProdutores] = useState('');
   const [filtro, setFiltro] = useState(FILTRO_INICIAL);
   const [erro, setErro] = useState('');
   const [aCarregar, setACarregar] = useState(
@@ -44,6 +50,70 @@ export default function Catalogo() {
 
   const carrinho = useCarrinho();
   const { utilizador } = useAuth();
+
+
+
+
+  // Carregar os produtores disponíveis para os filtros
+  useEffect(() => {
+    if (USAR_DADOS_SIMULADOS) {
+      const unicos = new Map();
+
+      for (const produto of produtosSimulados) {
+        const produtor = produto.produtor;
+
+        if (produtor?.nome) {
+          unicos.set(produtor.nome, {
+            _id: produtor.nome,
+            nome: produtor.nome,
+            produtor: produtor.produtor || {}
+          });
+        }
+      }
+
+      setProdutores([...unicos.values()]);
+      return undefined;
+    }
+
+    let ativo = true;
+
+    api('/producers')
+      .then((lista) => {
+        if (ativo) {
+          setProdutores(Array.isArray(lista) ? lista : []);
+          setErroProdutores('');
+        }
+      })
+      .catch(() => {
+        if (ativo) {
+          setErroProdutores(
+            'Não foi possível carregar a lista de produtores.'
+          );
+        }
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  // Localidades disponíveis
+  const localidades = [
+    ...new Set(
+      produtores
+        .map((p) => p.produtor?.localidade)
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a.localeCompare(b, 'pt'));
+
+  // Produtores correspondentes à localidade selecionada
+  const produtoresFiltrados = produtores.filter(
+    (p) =>
+      !filtro.localidade ||
+      p.produtor?.localidade === filtro.localidade
+  );
+
+
 
   useEffect(() => {
 
@@ -65,9 +135,25 @@ export default function Catalogo() {
           !filtro.bio ||
           p.biologico
         ) &&
-        p.nome
-          .toLocaleLowerCase('pt-PT')
-          .includes(pesquisa) &&
+
+        (
+          p.nome.toLocaleLowerCase('pt-PT').includes(pesquisa) ||
+          (p.descricao || '')
+            .toLocaleLowerCase('pt-PT')
+            .includes(pesquisa) ||
+          (p.produtor?.nome || '')
+            .toLocaleLowerCase('pt-PT')
+            .includes(pesquisa)
+        ) &&
+        (
+          !filtro.produtor ||
+          (p.produtor?._id || p.produtor?.nome) === filtro.produtor
+        ) &&
+        (
+          !filtro.localidade ||
+          p.produtor?.produtor?.localidade === filtro.localidade
+        ) &&
+
         (
           !filtro.epoca ||
           (p.epocas || []).includes(filtro.epoca)
@@ -120,6 +206,15 @@ export default function Catalogo() {
 
       if (filtro.precoMax !== '') {
         parametros.set('precoMax', filtro.precoMax);
+      }
+
+      if (filtro.produtor) {
+        parametros.set('produtor', filtro.produtor);
+
+      }
+
+      if (filtro.localidade) {
+        parametros.set('localidade', filtro.localidade);
       }
 
       parametros.set('ordenar', filtro.ordenar);
@@ -294,6 +389,66 @@ export default function Catalogo() {
           </div>
 
         </div>
+
+
+
+        {/* Filtros por localidade e produtor */}
+        <div className="row g-3 mt-1">
+          <div className="col-12 col-md-6">
+            <label htmlFor="localidade" className="form-label">
+              Localidade
+            </label>
+
+            <select
+              id="localidade"
+              className="form-select"
+              value={filtro.localidade}
+              onChange={(e) => {
+                setFiltro((anterior) => ({
+                  ...anterior,
+                  localidade: e.target.value,
+                  produtor: ''
+                }));
+              }}
+            >
+              <option value="">Todas as localidades</option>
+
+              {localidades.map((localidade) => (
+                <option key={localidade} value={localidade}>
+                  {localidade}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-md-6">
+            <label htmlFor="produtor" className="form-label">
+              Produtor
+            </label>
+
+            <select
+              id="produtor"
+              className="form-select"
+              value={filtro.produtor}
+              onChange={mudar('produtor')}
+            >
+              <option value="">Todos os produtores</option>
+
+              {produtoresFiltrados.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.produtor?.nomeExploracao || p.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {erroProdutores && (
+            <p className="small text-danger mb-0" role="alert">
+              {erroProdutores}
+            </p>
+          )}
+        </div>
+
 
         {/* Categorias */}
         <div

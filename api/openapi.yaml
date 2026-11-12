@@ -34,7 +34,7 @@ paths:
       parameters:
         - name: q
           in: query
-          description: Pesquisar pelo nome do produto
+          description: Pesquisar pelo nome ou descrição do produto e pelo nome do produtor
           schema:
             type: string
 
@@ -81,6 +81,13 @@ paths:
           description: Identificador MongoDB do produtor
           schema:
             type: string
+
+        - name: localidade
+          in: query
+          description: Filtrar pela localidade da exploração do produtor
+          schema:
+            type: string
+
 
         - name: ordenar
           in: query

@@ -1,5 +1,4 @@
-
- // Passo 3: recurso /api/products
+// Passo 3: recurso /api/products
 
 const router = require('express').Router();
 const multer = require('multer');
@@ -9,6 +8,8 @@ const porFazer = require('./_naoImplementado');
 const a = require('../utils/async');
 const erro = require('../utils/erro');
 const produtorValidado = require('../middleware/produtorValidado');
+const mongoose = require('mongoose');
+const User = require('../models/User');
 
 // Configuração do upload de imagens
 const upload = multer({
@@ -64,6 +65,7 @@ const escolher = (obj) => {
 // Listar produtos com pesquisa e filtros
 // ==================================================
 
+
 router.get('/', a(async (req, res) => {
   const {
     q,
@@ -72,17 +74,43 @@ router.get('/', a(async (req, res) => {
     bio,
     epoca,
     produtor,
+    localidade,
     ordenar
   } = req.query;
 
   const filtro = {};
 
-  // Pesquisa por nome
+  // Pesquisa por nome ou descrição do produto
+  // e nome do produtor ou da exploração.
   if (q) {
-    filtro.nome = {
-      $regex: escaparRegex(q),
-      $options: 'i'
-    };
+    if (typeof q !== 'string' || q.length > 100) {
+      throw erro(400, 'Pesquisa inválida (máximo 100 caracteres)');
+    }
+
+    const termo = q.trim();
+
+    if (termo) {
+      const regex = new RegExp(escaparRegex(termo), 'i');
+
+      const produtoresEncontrados = await User.find({
+        papel: 'produtor',
+        'produtor.validado': true,
+        $or: [
+          { nome: regex },
+          { 'produtor.nomeExploracao': regex }
+        ]
+      }).select('_id');
+
+      filtro.$or = [
+        { nome: regex },
+        { descricao: regex },
+        {
+          produtor: {
+            $in: produtoresEncontrados.map((u) => u._id)
+          }
+        }
+      ];
+    }
   }
 
   // Filtrar por categoria
@@ -92,7 +120,13 @@ router.get('/', a(async (req, res) => {
 
   // Filtrar por preço máximo
   if (precoMax) {
-    filtro.preco = { $lte: Number(precoMax) };
+    const valor = Number(precoMax);
+
+    if (!Number.isFinite(valor) || valor < 0) {
+      throw erro(400, 'Preço máximo inválido');
+    }
+
+    filtro.preco = { $lte: valor };
   }
 
   // Filtrar produtos biológicos
@@ -107,7 +141,46 @@ router.get('/', a(async (req, res) => {
 
   // Filtrar por produtor
   if (produtor) {
+    if (
+      typeof produtor !== 'string' ||
+      !mongoose.isValidObjectId(produtor)
+    ) {
+      throw erro(400, 'Identificador de produtor inválido');
+    }
+
     filtro.produtor = produtor;
+  }
+
+  // Filtrar por localidade da exploração
+  if (localidade) {
+    if (
+      typeof localidade !== 'string' ||
+      localidade.length > 100 ||
+      !localidade.trim()
+    ) {
+      throw erro(400, 'Localidade inválida');
+    }
+
+    const produtoresDaLocalidade = await User.find({
+      papel: 'produtor',
+      'produtor.validado': true,
+      'produtor.localidade': {
+        $regex: `^${escaparRegex(localidade.trim())}$`,
+        $options: 'i'
+      }
+    }).select('_id');
+
+    const ids = produtoresDaLocalidade.map((u) => u._id);
+
+    // Se forem usados ambos os filtros,
+    // o produtor tem de pertencer à localidade.
+    filtro.produtor = produtor
+      ? (
+          ids.some((id) => String(id) === produtor)
+            ? produtor
+            : { $in: [] }
+        )
+      : { $in: ids };
   }
 
   // Consultar os produtos no MongoDB
@@ -120,6 +193,7 @@ router.get('/', a(async (req, res) => {
 
   res.json(lista);
 }));
+
 
 
 // ==================================================
