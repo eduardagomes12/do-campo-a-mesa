@@ -6,12 +6,18 @@ import {
   useState
 } from 'react';
 
+import { useAuth } from './AuthContext.jsx';
+
 const CarrinhoContext = createContext(null);
 
+// ==================================================
+// RECUPERAR O CARRINHO DO UTILIZADOR
+// ==================================================
+
 // Recuperar os produtos guardados
-function lerCarrinho() {
+function lerCarrinho(chave) {
   try {
-    const dados = JSON.parse(localStorage.getItem('carrinho'));
+    const dados = JSON.parse(localStorage.getItem(chave));
     return Array.isArray(dados) ? dados : [];
   } catch {
     return [];
@@ -19,20 +25,71 @@ function lerCarrinho() {
 }
 
 export function CarrinhoProvider({ children }) {
-  const [linhas, setLinhas] = useState(lerCarrinho);
+  const { utilizador } = useAuth();
+
+  // Cada utilizador tem um carrinho independente.
+  // Os visitantes também têm um carrinho próprio.
+  const idUtilizador = utilizador?.id || utilizador?._id;
+
+  const chaveCarrinho = idUtilizador
+    ? `carrinho:utilizador:${idUtilizador}`
+    : 'carrinho:visitante';
+
+  // Guardar a chave juntamente com os produtos
+  // evita misturar carrinhos quando muda a sessão.
+  const [estado, setEstado] = useState(() => ({
+    chave: chaveCarrinho,
+    linhas: lerCarrinho(chaveCarrinho)
+  }));
+
+  // Se a conta mudar, ler imediatamente o carrinho
+  // correspondente à nova conta.
+  const linhas = estado.chave === chaveCarrinho
+    ? estado.linhas
+    : lerCarrinho(chaveCarrinho);
+
+  // Atualizar apenas o carrinho da conta atual
+  function definirLinhas(alteracao) {
+    setEstado((anterior) => {
+      const atuais = anterior.chave === chaveCarrinho
+        ? anterior.linhas
+        : lerCarrinho(chaveCarrinho);
+
+      const novas = typeof alteracao === 'function'
+        ? alteracao(atuais)
+        : alteracao;
+
+      return {
+        chave: chaveCarrinho,
+        linhas: novas
+      };
+    });
+  }
 
   // Guardar o carrinho sempre que mudar
   useEffect(() => {
+    // Não guardar dados de uma conta na chave de outra
+    if (estado.chave !== chaveCarrinho) {
+      return;
+    }
+
     try {
-      localStorage.setItem('carrinho', JSON.stringify(linhas));
+      localStorage.setItem(
+        chaveCarrinho,
+        JSON.stringify(estado.linhas)
+      );
     } catch {
       // Armazenamento indisponível
     }
-  }, [linhas]);
+  }, [estado, chaveCarrinho]);
+
+  // ==================================================
+  // ADICIONAR PRODUTOS
+  // ==================================================
 
   // Adicionar produtos
   function adicionar(produto, quantidade = 1) {
-    setLinhas((atual) => {
+    definirLinhas((atual) => {
       const existe = atual.find(
         (l) => l.produto._id === produto._id
       );
@@ -40,20 +97,32 @@ export function CarrinhoProvider({ children }) {
       if (existe) {
         return atual.map((l) =>
           l.produto._id === produto._id
-            ? { ...l, quantidade: l.quantidade + quantidade }
+            ? {
+                ...l,
+                quantidade: l.quantidade + quantidade
+              }
             : l
         );
       }
 
-      return [...atual, { produto, quantidade }];
+      return [
+        ...atual,
+        { produto, quantidade }
+      ];
     });
   }
 
+  // ==================================================
+  // ALTERAR QUANTIDADES
+  // ==================================================
+
   // Alterar a quantidade de um produto
   function alterarQuantidade(produtoId, quantidade) {
-    setLinhas((atual) =>
+    definirLinhas((atual) =>
       quantidade < 1
-        ? atual.filter((l) => l.produto._id !== produtoId)
+        ? atual.filter(
+            (l) => l.produto._id !== produtoId
+          )
         : atual.map((l) =>
             l.produto._id === produtoId
               ? { ...l, quantidade }
@@ -62,12 +131,24 @@ export function CarrinhoProvider({ children }) {
     );
   }
 
+  // ==================================================
+  // REMOVER PRODUTOS
+  // ==================================================
+
   // Remover um produto
   const remover = (produtoId) =>
     alterarQuantidade(produtoId, 0);
 
+  // ==================================================
+  // ESVAZIAR O CARRINHO
+  // ==================================================
+
   // Esvaziar o carrinho
-  const esvaziar = () => setLinhas([]);
+  const esvaziar = () => definirLinhas([]);
+
+  // ==================================================
+  // CALCULAR O TOTAL
+  // ==================================================
 
   // Calcular o preço total
   const total = useMemo(

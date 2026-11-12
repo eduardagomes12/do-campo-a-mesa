@@ -113,7 +113,12 @@ router.post('/', auth('comprador'), a(async (req, res) => {
 
       // Criar as encomendas na mesma transação.
       // Se falhar, o stock também é revertido.
-      return Order.create(documentos, { session });
+      
+      return Order.create(documentos, {
+        session,
+        ordered: true
+      });
+
     }
   );
 
