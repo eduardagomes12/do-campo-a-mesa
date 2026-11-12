@@ -199,6 +199,11 @@
 
        const { bid, numLicitacoes } = resultado;
 
+        // A licitação foi guardada com sucesso.
+        // Avisar os administradores para atualizarem o painel.
+        io.to('admin:leiloes').emit('leiloes-atualizados');
+
+
        // Notificar todos os participantes da sala
        io.to(sala(leilaoId)).emit('nova-licitacao', {
          _id: bid._id,

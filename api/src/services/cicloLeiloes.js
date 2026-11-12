@@ -31,6 +31,11 @@ async function abrirLeilao(io, id) {
     id: leilao.id
   });
 
+
+   // Atualizar a lista de leilões ativos no painel admin.
+   io?.to('admin:leiloes').emit('leiloes-atualizados');
+
+
   return leilao;
 }
 
@@ -115,6 +120,12 @@ async function fecharLeilao(io, id) {
     vencedor: vencedor ? String(vencedor) : null,
     valor
   });
+
+
+  // Atualizar automaticamente o painel administrativo
+  // depois do encerramento confirmado no MongoDB.
+  io?.to('admin:leiloes').emit('leiloes-atualizados');
+
 
   // Informar o produtor, mesmo sem licitações.
   io?.to(`user:${leilao.produtor}`).emit(

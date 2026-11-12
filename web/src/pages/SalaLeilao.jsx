@@ -1,5 +1,5 @@
 // Comprador: sala de leilão em tempo real
- import { useState } from 'react';
+import { useEffect, useState } from 'react';
  import { useParams } from 'react-router-dom';
  import { useAuth } from '../context/AuthContext.jsx';
  import { useLeilao } from '../hooks/useLeilao.js';
@@ -90,6 +90,16 @@
      (precoAtual + incremento) * 100
    ) / 100;
 
+
+
+  // Atualizar automaticamente a sugestão de licitação mínima
+  useEffect(() => {
+    if (minimo > 0) {
+      setValor(minimo.toFixed(2));
+    }
+  }, [id, minimo]);
+
+
    const comprador = utilizador?.papel === 'comprador';
 
    const podeLicitar = (
@@ -119,31 +129,48 @@
      leilao?.produtor?.produtor?.nomeExploracao ||
      leilao?.produtor?.nome;
 
-   function submeter(e) {
-     e.preventDefault();
-     setErroFormulario('');
 
-     const numero = Number(valor);
 
-     if (
-       !valor.trim() ||
-       !Number.isFinite(numero) ||
-       numero <= 0 ||
-       Math.abs(numero * 100 - Math.round(numero * 100)) > 1e-6
-     ) {
-       setErroFormulario(
-         'Introduz um valor válido com até duas casas decimais.'
-       );
-       return;
-     }
+    function preencherAtalho(acrescimo) {
+      if (!podeLicitar) return;
 
-     if (numero < minimo) {
-       setErroFormulario(
-         `A licitação mínima é ${moeda(minimo)}.`
-       );
-       return;
-     }
+      const novoValor = Math.round(
+        (precoAtual + acrescimo) * 100
+      ) / 100;
 
+      // Respeitar sempre o incremento mínimo do leilão.
+      if (novoValor < minimo) return;
+
+      setValor(novoValor.toFixed(2));
+      setErroFormulario('');
+    }
+
+
+
+    function submeter(e) {
+      e.preventDefault();
+      setErroFormulario('');
+
+      const numero = Number(valor);
+
+      if (
+        !valor.trim() ||
+        !Number.isFinite(numero) ||
+        numero <= 0 ||
+        Math.abs(numero * 100 - Math.round(numero * 100)) > 1e-6
+      ) {
+        setErroFormulario(
+          'Introduz um valor válido com até duas casas decimais.'
+        );
+        return;
+      }
+
+      if (numero < minimo) {
+        setErroFormulario(
+          `A licitação mínima é ${moeda(minimo)}.`
+        );
+        return;
+      }
 
       if (!podeLicitar) {
         setErroFormulario(
@@ -169,11 +196,9 @@
         if (!confirmado) return;
       }
 
+      // Enviar apenas UMA licitação ao servidor.
       licitar(numero);
-
-
-     licitar(numero);
-   }
+    }
 
    if (!leilao) {
      return (
@@ -398,6 +423,38 @@
                  disabled={!podeLicitar}
                  required
                />
+
+
+                {/* Passo 7: atalhos rápidos de licitação */}
+                <div className="mb-3">
+                  <p className="small text-body-secondary mb-2">
+                    Atalhos rápidos
+                  </p>
+
+                  <div className="d-flex flex-wrap gap-2">
+                    {[5, 10, 25].map((acrescimo) => {
+                      const valorSugerido = Math.round(
+                        (precoAtual + acrescimo) * 100
+                      ) / 100;
+
+                      return (
+                        <button
+                          key={acrescimo}
+                          type="button"
+                          className="btn btn-outline-success flex-fill"
+                          disabled={
+                            !podeLicitar ||
+                            valorSugerido < minimo
+                          }
+                          title={`Preencher ${moeda(valorSugerido)}`}
+                          onClick={() => preencherAtalho(acrescimo)}
+                        >
+                          +{acrescimo} €
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                <button
                  type="submit"

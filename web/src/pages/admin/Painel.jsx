@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../api/client.js';
+import { useSocket } from '../../context/SocketContext.jsx';
 
 const moeda = (valor) =>
   Number(valor || 0).toLocaleString('pt-PT', {
@@ -10,6 +11,7 @@ const moeda = (valor) =>
 
 export default function PainelAdmin() {
   const { token } = useAuth();
+  const socket = useSocket();
 
   const [estatisticas, setEstatisticas] = useState(null);
   const [produtores, setProdutores] = useState([]);
@@ -67,6 +69,54 @@ export default function PainelAdmin() {
   useEffect(() => {
     carregarDados();
   }, [carregarDados]);
+
+
+
+  // Atualizar apenas os leilões e as estatísticas.
+  // Evita recarregar produtores e avaliações a cada oferta.
+  const atualizarLeiloes = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      const [dadosEstatisticas, dadosLeiloes] =
+        await Promise.all([
+          api('/admin/estatisticas', { token }),
+          api('/auctions?estado=ativo')
+        ]);
+
+      setEstatisticas(dadosEstatisticas);
+
+      setLeiloes(
+        Array.isArray(dadosLeiloes) ? dadosLeiloes : []
+      );
+    } catch (e) {
+      console.error(
+        'Erro ao atualizar os leilões em tempo real:',
+        e
+      );
+    }
+  }, [token]);
+
+  // Ouvir notificações de alterações nos leilões.
+  useEffect(() => {
+    if (!socket) return undefined;
+
+    const aoAtualizar = () => {
+      void atualizarLeiloes();
+    };
+
+    // Nova licitação, abertura ou encerramento.
+    socket.on('leiloes-atualizados', aoAtualizar);
+
+    // Recuperar informação após uma reconexão.
+    socket.on('connect', aoAtualizar);
+
+    return () => {
+      socket.off('leiloes-atualizados', aoAtualizar);
+      socket.off('connect', aoAtualizar);
+    };
+  }, [socket, atualizarLeiloes]);
+
 
   // Aprovar ou rejeitar um produtor
   async function validarProdutor(produtor, aprovado) {
