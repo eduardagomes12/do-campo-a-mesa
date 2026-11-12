@@ -6,6 +6,11 @@ const app = require('./app');
 const { ligarBD } = require('./config/db');
 const registarSockets = require('./sockets');
 
+const {
+  iniciarCicloLeiloes
+} = require('./services/cicloLeiloes');
+
+
 const PORT = process.env.PORT || 3000;
 
 async function iniciar() {
@@ -13,17 +18,22 @@ async function iniciar() {
 
   const server = http.createServer(app);
   const io = new Server(server, {
-    cors: { origin: process.env.CLIENT_URL || '*' }
+    cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173' }
   });
 
   // Disponibiliza o io às rotas (ex.: notificar o comprador quando a encomenda muda)
   app.set('io', io);
   registarSockets(io);
 
+
   server.listen(PORT, () => {
     console.log(`API em http://localhost:${PORT}`);
     console.log(`Documentação em http://localhost:${PORT}/api-docs`);
+
+    // Passo 7: abertura e encerramento automático dos leilões.
+    iniciarCicloLeiloes(io);
   });
+
 }
 
 iniciar().catch((err) => {

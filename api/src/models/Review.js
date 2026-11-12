@@ -12,9 +12,31 @@ const reviewSchema = new Schema({
   produto: { type: Types.ObjectId, ref: 'Product' },
   encomenda: { type: Types.ObjectId, ref: 'Order' },
   classificacao: { type: Number, min: 1, max: 5, required: true },
-  comentario: String,
+  comentario: {
+    type: String,
+    trim: true,
+    maxlength: 1000
+  },
   denuncias: { type: Number, default: 0 },
   visivel: { type: Boolean, default: true }
 }, { timestamps: true });
+
+// Passo 7: impedir avaliações duplicadas.
+// Produto ausente = avaliação do produtor.
+// Só abrange avaliações ligadas a uma encomenda,
+// preservando avaliações antigas sem essa referência.
+reviewSchema.index(
+  {
+    autor: 1,
+    encomenda: 1,
+    produto: 1
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      encomenda: { $type: 'objectId' }
+    }
+  }
+);
 
 module.exports = model('Review', reviewSchema);

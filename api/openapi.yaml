@@ -895,6 +895,60 @@ paths:
   # AVALIAÇÕES
   # ==========================================
 
+  /reviews/minhas:
+    get:
+      tags: [Avaliações]
+      summary: Consultar as avaliações do comprador autenticado
+      operationId: listarMinhasAvaliacoes
+
+      description: >
+        Devolve as avaliações realizadas pelo comprador autenticado,
+        ordenadas da mais recente para a mais antiga.
+        Permite filtrar por encomenda e inclui avaliações
+        de produtores e produtos.
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: encomenda
+          in: query
+          required: false
+          description: Identificador MongoDB da encomenda
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Lista de avaliações do comprador
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Avaliacao'
+
+        '400':
+          description: Identificador da encomenda inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+        '401':
+          description: Token inválido ou em falta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+        '403':
+          description: Apenas compradores podem consultar esta rota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
   /reviews:
     get:
       tags: [Avaliações]

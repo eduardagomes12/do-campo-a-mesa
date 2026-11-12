@@ -1,80 +1,84 @@
-// Passo 2: routing no cliente
-import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar.jsx';
-import RotaProtegida from './components/RotaProtegida.jsx';
-import Catalogo from './pages/Catalogo.jsx';
-import Produtor from './pages/Produtor.jsx';
-import Leiloes from './pages/Leiloes.jsx';
-import SalaLeilao from './pages/SalaLeilao.jsx';
-import Carrinho from './pages/Carrinho.jsx';
-import Encomendas from './pages/Encomendas.jsx';
-import Login from './pages/Login.jsx';
-import Registo from './pages/Registo.jsx';
-import PainelProdutor from './pages/produtor/Painel.jsx';
-import NovoLeilao from './pages/produtor/NovoLeilao.jsx';
-import ProdutosProdutor from './pages/produtor/Produtos.jsx';
-import PainelAdmin from './pages/admin/Painel.jsx';
-import NaoEncontrado from './pages/NaoEncontrado.jsx';
 
-export default function App() {
-  
-  return (
-    <>
-      <a href="#conteudo" className="visually-hidden-focusable">
-        Saltar para o conteúdo
-      </a>
+ // Passo 2: routing no cliente
+ import { Routes, Route } from 'react-router-dom';
+ import Navbar from './components/Navbar.jsx';
+ import RotaProtegida from './components/RotaProtegida.jsx';
+ import Catalogo from './pages/Catalogo.jsx';
+ import Produtor from './pages/Produtor.jsx';
+ import Leiloes from './pages/Leiloes.jsx';
+ import SalaLeilao from './pages/SalaLeilao.jsx';
+ import Carrinho from './pages/Carrinho.jsx';
+ import Encomendas from './pages/Encomendas.jsx';
+ import Login from './pages/Login.jsx';
+ import Registo from './pages/Registo.jsx';
+ import PainelProdutor from './pages/produtor/Painel.jsx';
+ import NovoLeilao from './pages/produtor/NovoLeilao.jsx';
+ import ProdutosProdutor from './pages/produtor/Produtos.jsx';
+ import PainelAdmin from './pages/admin/Painel.jsx';
+ import NaoEncontrado from './pages/NaoEncontrado.jsx';
 
-      <Navbar />
+ // Passo 7: Socket.io e notificações em tempo real
+ import { SocketProvider } from './context/SocketContext.jsx';
+ import Notificacoes from './components/Notificacoes.jsx';
 
-      <main id="conteudo" className="container-xl py-4">
+ export default function App() {
+   return (
+     <SocketProvider>
+       <a href="#conteudo" className="visually-hidden-focusable">
+         Saltar para o conteúdo
+       </a>
 
-        <Routes>
-          {/* Visitante */}
-          <Route path="/" element={<Catalogo />} />
-          <Route path="/produtores/:id" element={<Produtor />} />
-          <Route path="/leiloes" element={<Leiloes />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registo" element={<Registo />} />
+       <Navbar />
 
+       {/* Passo 7: notificações em tempo real */}
+       <Notificacoes />
 
-          {/* Comprador */}
-          
-          {/* Qualquer utilizador autenticado pode assistir */}
-          <Route element={<RotaProtegida />}>
-            <Route path="/leiloes/:id" element={<SalaLeilao />} />
-          </Route>
+       <main id="conteudo" className="container-xl py-4">
+         <Routes>
+           {/* Visitante */}
+           <Route path="/" element={<Catalogo />} />
+           <Route path="/produtores/:id" element={<Produtor />} />
+           <Route path="/leiloes" element={<Leiloes />} />
+           <Route path="/login" element={<Login />} />
+           <Route path="/registo" element={<Registo />} />
 
-          {/* Comprador */}
-          <Route element={<RotaProtegida papeis={['comprador']} />}>
-            <Route path="/carrinho" element={<Carrinho />} />
-            <Route path="/encomendas" element={<Encomendas />} />
-          </Route>
+           {/* Comprador */}
 
-          {/* Produtor */}
-          <Route element={<RotaProtegida papeis={['produtor']} />}>
-            <Route
-              path="/produtor"
-              element={<PainelProdutor />}
-            />
-            <Route
-              path="/produtor/produtos"
-              element={<ProdutosProdutor />}
-            />
-            <Route
-              path="/produtor/leiloes/novo"
-              element={<NovoLeilao />}
-            />
-          </Route>
+           {/* Qualquer utilizador autenticado pode assistir */}
+           <Route element={<RotaProtegida />}>
+             <Route path="/leiloes/:id" element={<SalaLeilao />} />
+           </Route>
 
+           {/* Comprador */}
+           <Route element={<RotaProtegida papeis={['comprador']} />}>
+             <Route path="/carrinho" element={<Carrinho />} />
+             <Route path="/encomendas" element={<Encomendas />} />
+           </Route>
 
-          {/* Administrador */}
-          <Route element={<RotaProtegida papeis={['admin']} />}>
-            <Route path="/admin" element={<PainelAdmin />} />
-          </Route>
+           {/* Produtor */}
+           <Route element={<RotaProtegida papeis={['produtor']} />}>
+             <Route
+               path="/produtor"
+               element={<PainelProdutor />}
+             />
+             <Route
+               path="/produtor/produtos"
+               element={<ProdutosProdutor />}
+             />
+             <Route
+               path="/produtor/leiloes/novo"
+               element={<NovoLeilao />}
+             />
+           </Route>
 
-          <Route path="*" element={<NaoEncontrado />} />
-        </Routes>
-      </main>
-    </>
-  );
-}
+           {/* Administrador */}
+           <Route element={<RotaProtegida papeis={['admin']} />}>
+             <Route path="/admin" element={<PainelAdmin />} />
+           </Route>
+
+           <Route path="*" element={<NaoEncontrado />} />
+         </Routes>
+       </main>
+     </SocketProvider>
+   );
+ }

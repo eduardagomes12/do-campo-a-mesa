@@ -1,6 +1,7 @@
 // Passo 3: recurso /api/reviews
 
 const router = require('express').Router();
+const { isValidObjectId } = require('mongoose');
 const Review = require('../models/Review');
 const auth = require('../middleware/auth');
 const a = require('../utils/async');
@@ -19,11 +20,33 @@ router.post('/', auth('comprador'), a(async (req, res) => {
   } = req.body || {};
 
   // Validar os dados obrigatórios
-  if (!encomenda ||
-      !Number.isInteger(classificacao) ||
-      classificacao < 1 ||
-      classificacao > 5) {
+  if (
+    !encomenda ||
+    !isValidObjectId(encomenda) ||
+    !Number.isInteger(classificacao) ||
+    classificacao < 1 ||
+    classificacao > 5
+  ) {
     throw erro(400, 'Dados da avaliação inválidos');
+  }
+
+  // Validar o produto, quando indicado
+  if (
+    produto != null &&
+    !isValidObjectId(produto)
+  ) {
+    throw erro(400, 'Produto inválido');
+  }
+
+  // Validar o comentário
+  if (
+    comentario != null &&
+    (
+      typeof comentario !== 'string' ||
+      comentario.length > 1000
+    )
+  ) {
+    throw erro(400, 'Comentário inválido');
   }
 
   // A encomenda tem de pertencer ao comprador
@@ -42,23 +65,74 @@ router.post('/', auth('comprador'), a(async (req, res) => {
   }
 
   // Se avaliar um produto, tem de pertencer à encomenda
-  if (produto && !o.linhas.some(
-    (l) => l.produto?.toString() === produto
-  )) {
+  if (
+    produto &&
+    !o.linhas.some(
+      (l) => String(l.produto) === String(produto)
+    )
+  ) {
     throw erro(400, 'Produto não pertence à encomenda');
   }
 
-  // Criar a avaliação
-  const avaliacao = await Review.create({
+  // Não permitir avaliar duas vezes o mesmo alvo
+  // dentro da mesma encomenda.
+  const jaExiste = await Review.exists({
     autor: req.user.id,
-    produtor: o.produtor,
-    produto,
     encomenda: o._id,
-    classificacao,
-    comentario
+    produto: produto || null
   });
 
-  res.status(201).json(avaliacao);
+  if (jaExiste) {
+    throw erro(409, 'Já avaliaste este produto ou produtor nesta encomenda');
+  }
+
+  // Criar a avaliação
+  try {
+    const avaliacao = await Review.create({
+      autor: req.user.id,
+      produtor: o.produtor,
+      produto: produto || undefined,
+      encomenda: o._id,
+      classificacao,
+      comentario: comentario?.trim()
+    });
+
+    return res.status(201).json(avaliacao);
+  } catch (err) {
+    // O índice único também protege contra pedidos simultâneos.
+    if (err.code === 11000) {
+      throw erro(
+        409,
+        'Já avaliaste este produto ou produtor nesta encomenda'
+      );
+    }
+
+    throw err;
+  }
+}));
+
+
+// GET /api/reviews/minhas?encomenda=
+// Consultar as avaliações do comprador autenticado
+router.get('/minhas', auth('comprador'), a(async (req, res) => {
+  const { encomenda } = req.query;
+
+  if (encomenda && !isValidObjectId(encomenda)) {
+    throw erro(400, 'Identificador de encomenda inválido');
+  }
+
+  const filtro = {
+    autor: req.user.id
+  };
+
+  if (encomenda) {
+    filtro.encomenda = encomenda;
+  }
+
+  const avaliacoes = await Review.find(filtro)
+    .sort({ createdAt: -1 });
+
+  res.json(avaliacoes);
 }));
 
 
@@ -86,6 +160,7 @@ router.get('/', a(async (req, res) => {
   res.json(avaliacoes);
 }));
 
+
 // POST /api/reviews/:id/denuncia
 // Denunciar avaliação
 
@@ -102,6 +177,5 @@ router.post('/:id/denuncia', auth(), a(async (req, res) => {
 
   res.status(204).end();
 }));
-
 
 module.exports = router;
