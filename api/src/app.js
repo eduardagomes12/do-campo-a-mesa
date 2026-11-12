@@ -8,8 +8,13 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
-app.use(express.json());
+
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173'
+}));
+
+app.use(express.json({ limit: '1mb' }));
+
 
 // Passo 5: documentação OpenAPI em /api-docs
 const openapi = YAML.load(path.join(__dirname, '..', 'openapi.yaml'));
