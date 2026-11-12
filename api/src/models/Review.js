@@ -1,5 +1,9 @@
-// TODO (Passo 4): decidir se as avaliações ficam embebidas no produto/produtor
-// ou numa coleção própria, e justificar a decisão no relatório.
+// Passo 4 — Decisão de modelação:
+// As avaliações são armazenadas numa coleção própria (reviews).
+// Esta abordagem permite consultar avaliações por produtor ou produto,
+// moderá-las individualmente e evitar o crescimento dos documentos
+// de produtos e produtores. As relações são feitas por referências ObjectId.
+
 const { Schema, model, Types } = require('mongoose');
 
 const reviewSchema = new Schema({

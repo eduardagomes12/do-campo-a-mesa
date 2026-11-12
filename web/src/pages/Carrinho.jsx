@@ -4,7 +4,13 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api/client.js';
 
 export default function Carrinho() {
-  const { linhas, remover, total } = useCarrinho();
+  const {
+    linhas,
+    alterarQuantidade,
+    remover,
+    total
+  } = useCarrinho();
+
   const { token } = useAuth();
 
   const [tipoEntrega, setTipoEntrega] = useState('levantamento');
@@ -12,6 +18,10 @@ export default function Carrinho() {
   const [aEnviar, setAEnviar] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
+
+  // ==========================================
+  // FINALIZAR ENCOMENDA
+  // ==========================================
 
   async function finalizarEncomenda(evento) {
     evento.preventDefault();
@@ -40,8 +50,10 @@ export default function Carrinho() {
         produto: produto._id,
         quantidade
       })),
+
       entrega: {
         tipo: tipoEntrega,
+
         ...(tipoEntrega === 'entrega'
           ? { morada: morada.trim() }
           : {})
@@ -51,7 +63,7 @@ export default function Carrinho() {
     setAEnviar(true);
 
     try {
-      // A API cria uma encomenda por produtor
+      // Criar uma encomenda por produtor
       const encomendas = await api('/orders', {
         metodo: 'POST',
         corpo: dados,
@@ -73,87 +85,213 @@ export default function Carrinho() {
 
       setMorada('');
       setTipoEntrega('levantamento');
+
     } catch (e) {
       setErro(e.message);
+
     } finally {
       setAEnviar(false);
     }
   }
 
+  // ==========================================
+  // INTERFACE DO CARRINHO
+  // ==========================================
+
   return (
     <section aria-labelledby="titulo-carrinho">
+
       <h1 id="titulo-carrinho" className="mb-4">
         Carrinho
       </h1>
 
+      {/* Mensagens de erro */}
       {erro && (
-        <div className="alert alert-danger" role="alert">
+        <div
+          className="alert alert-danger"
+          role="alert"
+        >
           {erro}
         </div>
       )}
 
+      {/* Mensagens de sucesso */}
       {sucesso && (
-        <div className="alert alert-success" role="status">
+        <div
+          className="alert alert-success"
+          role="status"
+        >
           {sucesso}
         </div>
       )}
 
       {linhas.length === 0 ? (
+
         <p className="texto-secundario">
           O carrinho está vazio.
         </p>
+
       ) : (
+
         <>
-          {/* Produtos no carrinho */}
+          {/* ======================================
+              LISTA DOS PRODUTOS
+          ====================================== */}
+
           <ul className="list-group mb-4">
+
             {linhas.map(({ produto, quantidade }) => (
+
               <li
                 key={produto._id}
-                className="list-group-item d-flex justify-content-between align-items-center gap-3"
+                className="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-3"
               >
-                <div>
-                  <strong>{produto.nome}</strong>
 
-                  <p className="mb-1 texto-secundario">
-                    Quantidade: {quantidade} {produto.unidade}
+                <div className="flex-grow-1">
+
+                  {/* Nome do produto */}
+                  <strong>
+                    {produto.nome}
+                  </strong>
+
+                  {/* Preço unitário */}
+                  <p className="mb-2 texto-secundario">
+                    {Number(produto.preco).toFixed(2)} €
+                    {' / '}
+                    {produto.unidade}
                   </p>
 
-                  <span>
-                    {(Number(produto.preco) * quantidade)
-                      .toFixed(2)} €
-                  </span>
+                  {/* ==================================
+                      CONTROLOS DE QUANTIDADE
+                  ================================== */}
+
+                  <div className="d-flex align-items-center gap-2 mb-2">
+
+                    <span className="texto-secundario">
+                      Quantidade:
+                    </span>
+
+                    <div
+                      className="btn-group btn-group-sm"
+                      role="group"
+                      aria-label={`Quantidade de ${produto.nome}`}
+                    >
+
+                      {/* Diminuir quantidade */}
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        aria-label={`Diminuir quantidade de ${produto.nome}`}
+                        onClick={() =>
+                          alterarQuantidade(
+                            produto._id,
+                            quantidade - 1
+                          )
+                        }
+                        disabled={
+                          aEnviar ||
+                          quantidade <= 1
+                        }
+                      >
+                        −
+                      </button>
+
+                      {/* Quantidade atual */}
+                      <span
+                        className="btn btn-outline-secondary disabled"
+                        aria-live="polite"
+                      >
+                        {quantidade}
+                      </span>
+
+                      {/* Aumentar quantidade */}
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        aria-label={`Aumentar quantidade de ${produto.nome}`}
+                        onClick={() =>
+                          alterarQuantidade(
+                            produto._id,
+                            quantidade + 1
+                          )
+                        }
+                        disabled={aEnviar}
+                      >
+                        +
+                      </button>
+
+                    </div>
+
+                    <span className="texto-secundario">
+                      {produto.unidade}
+                    </span>
+
+                  </div>
+
+                  {/* Subtotal do produto */}
+                  <p className="mb-0">
+                    <strong>
+                      Subtotal:{' '}
+                      {(
+                        Number(produto.preco) *
+                        quantidade
+                      ).toFixed(2)} €
+                    </strong>
+                  </p>
+
                 </div>
 
+                {/* Remover produto */}
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-danger"
-                  onClick={() => remover(produto._id)}
+                  onClick={() =>
+                    remover(produto._id)
+                  }
                   disabled={aEnviar}
                 >
                   Remover
                 </button>
+
               </li>
+
             ))}
+
           </ul>
 
-          <p className="fw-bold fs-5 mb-4">
+          {/* ======================================
+              TOTAL DO CARRINHO
+          ====================================== */}
+
+          <p
+            className="fw-bold fs-5 mb-4"
+            aria-live="polite"
+          >
             Total: {total.toFixed(2)} €
           </p>
 
-          {/* Escolha do tipo de entrega */}
+          {/* ======================================
+              FORMULÁRIO DE ENTREGA
+          ====================================== */}
+
           <form onSubmit={finalizarEncomenda}>
+
             <h2 className="h4 mb-3">
               Como pretende receber a encomenda?
             </h2>
 
+            {/* Levantamento */}
             <div className="form-check mb-2">
+
               <input
                 className="form-check-input"
                 type="radio"
                 name="tipoEntrega"
                 id="levantamento"
                 value="levantamento"
-                checked={tipoEntrega === 'levantamento'}
+                checked={
+                  tipoEntrega === 'levantamento'
+                }
                 onChange={(e) =>
                   setTipoEntrega(e.target.value)
                 }
@@ -166,16 +304,21 @@ export default function Carrinho() {
               >
                 Levantamento no produtor
               </label>
+
             </div>
 
+            {/* Entrega */}
             <div className="form-check mb-3">
+
               <input
                 className="form-check-input"
                 type="radio"
                 name="tipoEntrega"
                 id="entrega"
                 value="entrega"
-                checked={tipoEntrega === 'entrega'}
+                checked={
+                  tipoEntrega === 'entrega'
+                }
                 onChange={(e) =>
                   setTipoEntrega(e.target.value)
                 }
@@ -188,10 +331,14 @@ export default function Carrinho() {
               >
                 Entrega na morada indicada
               </label>
+
             </div>
 
+            {/* Morada de entrega */}
             {tipoEntrega === 'entrega' && (
+
               <div className="mb-4">
+
                 <label
                   htmlFor="morada"
                   className="form-label"
@@ -211,9 +358,12 @@ export default function Carrinho() {
                   required
                   disabled={aEnviar}
                 />
+
               </div>
+
             )}
 
+            {/* Finalizar encomenda */}
             <button
               type="submit"
               className="btn btn-success"
@@ -223,9 +373,12 @@ export default function Carrinho() {
                 ? 'A processar encomenda...'
                 : 'Finalizar encomenda'}
             </button>
+
           </form>
         </>
+
       )}
+
     </section>
   );
 }

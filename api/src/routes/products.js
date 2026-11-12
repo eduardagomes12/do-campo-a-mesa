@@ -39,12 +39,24 @@ const CAMPOS = [
 ];
 
 // Selecionar apenas os campos permitidos
-const escolher = (obj) =>
-  Object.fromEntries(
+
+const escolher = (obj) => {
+  // Garantir que trabalhamos sempre com um objeto válido
+  const dados =
+    obj &&
+    typeof obj === 'object' &&
+    !Array.isArray(obj)
+      ? obj
+      : {};
+
+  // Copiar apenas os campos permitidos
+  return Object.fromEntries(
     CAMPOS
-      .filter((c) => obj[c] !== undefined)
-      .map((c) => [c, obj[c]])
+      .filter((campo) => dados[campo] !== undefined)
+      .map((campo) => [campo, dados[campo]])
   );
+};
+
 
 
 // ==================================================

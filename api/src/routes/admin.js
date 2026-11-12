@@ -1,25 +1,28 @@
+
 // Painel do administrador
+
 const router = require('express').Router();
+
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const Auction = require('../models/Auction');
-const a = require('../utils/async');
-const erro = require('../utils/erro');
 const Review = require('../models/Review');
 
+const a = require('../utils/async');
+const erro = require('../utils/erro');
 
+// Todas as rotas exigem administrador autenticado
 router.use(auth('admin'));
 
-// GET /api/admin/estatisticas  -> 200 { utilizadores, produtores, encomendasHoje, leiloesAtivos }
+// ==========================================
+// GET /api/admin/estatisticas
+// ==========================================
 
 router.get('/estatisticas', a(async (req, res) => {
-
-  // Início do dia atual
   const inicioHoje = new Date();
   inicioHoje.setHours(0, 0, 0, 0);
 
-  // Consultar os totais no MongoDB
   const [
     utilizadores,
     produtores,
@@ -27,11 +30,18 @@ router.get('/estatisticas', a(async (req, res) => {
     leiloesAtivos
   ] = await Promise.all([
     User.countDocuments(),
-    User.countDocuments({ papel: 'produtor' }),
+
+    User.countDocuments({
+      papel: 'produtor'
+    }),
+
     Order.countDocuments({
       createdAt: { $gte: inicioHoje }
     }),
-    Auction.countDocuments({ estado: 'ativo' })
+
+    Auction.countDocuments({
+      estado: 'ativo'
+    })
   ]);
 
   res.json({
@@ -42,13 +52,19 @@ router.get('/estatisticas', a(async (req, res) => {
   });
 }));
 
-
-// GET /api/admin/produtores/pendentes  -> 200 [produtores por validar]
+// ==========================================
+// GET /api/admin/produtores/pendentes
+// ==========================================
 
 router.get('/produtores/pendentes', a(async (req, res) => {
   const produtores = await User.find({
     papel: 'produtor',
-    'produtor.validado': false
+
+    // Ainda não aprovados
+    'produtor.validado': false,
+
+    // Excluir os que já foram rejeitados
+    'produtor.rejeitado': { $ne: true }
   })
     .select('nome email produtor createdAt')
     .sort({ createdAt: -1 });
@@ -56,25 +72,34 @@ router.get('/produtores/pendentes', a(async (req, res) => {
   res.json(produtores);
 }));
 
-
-// PATCH /api/admin/produtores/:id/validacao  { aprovado: true|false }  -> 200
+// ==========================================
+// PATCH /api/admin/produtores/:id/validacao
+// Corpo: { aprovado: true | false }
+// ==========================================
 
 router.patch('/produtores/:id/validacao', a(async (req, res) => {
   const { aprovado } = req.body || {};
 
-  // O campo aprovado deve ser true ou false
   if (typeof aprovado !== 'boolean') {
-    throw erro(400, 'O campo aprovado deve ser booleano');
+    throw erro(
+      400,
+      'O campo aprovado deve ser booleano'
+    );
   }
 
-  // Procurar o produtor e atualizar a validação
   const produtor = await User.findOneAndUpdate(
     {
       _id: req.params.id,
       papel: 'produtor'
     },
     {
-      $set: { 'produtor.validado': aprovado }
+      $set: {
+        // Aprovar
+        'produtor.validado': aprovado,
+
+        // Rejeitar quando aprovado === false
+        'produtor.rejeitado': !aprovado
+      }
     },
     {
       new: true,
@@ -89,31 +114,42 @@ router.patch('/produtores/:id/validacao', a(async (req, res) => {
   res.json(produtor);
 }));
 
-
-// GET /api/admin/reviews/denunciadas  -> 200
+// ==========================================
+// GET /api/admin/reviews/denunciadas
+// ==========================================
 
 router.get('/reviews/denunciadas', a(async (req, res) => {
   const avaliacoes = await Review.find({
     denuncias: { $gt: 0 }
   })
-    .sort({ denuncias: -1, createdAt: -1 })
+    .sort({
+      denuncias: -1,
+      createdAt: -1
+    })
     .populate('autor', 'nome')
-    .populate('produtor', 'nome produtor.nomeExploracao');
+    .populate(
+      'produtor',
+      'nome produtor.nomeExploracao'
+    );
 
   res.json(avaliacoes);
 }));
 
+// ==========================================
+// PATCH /api/admin/reviews/:id
+// Corpo: { visivel: true | false }
+// ==========================================
 
-// PATCH /api/admin/reviews/:id  { visivel: false }  -> 200
 router.patch('/reviews/:id', a(async (req, res) => {
   const { visivel } = req.body || {};
 
-  // Validar o campo recebido
   if (typeof visivel !== 'boolean') {
-    throw erro(400, 'O campo visivel deve ser booleano');
+    throw erro(
+      400,
+      'O campo visivel deve ser booleano'
+    );
   }
 
-  // Atualizar a visibilidade da avaliação
   const avaliacao = await Review.findByIdAndUpdate(
     req.params.id,
     {

@@ -86,10 +86,11 @@ export default function PainelAdmin() {
 
       await carregarDados();
 
+
       setSucesso(
         aprovado
           ? 'Produtor aprovado com sucesso.'
-          : 'Validação do produtor definida como não aprovada.'
+          : 'Produtor rejeitado com sucesso.'
       );
     } catch (e) {
       setErro(e.message || 'Erro ao validar produtor.');
