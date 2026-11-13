@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../api/client.js';
 import EstadoEncomenda from '../../components/EstadoEncomenda.jsx';
+import EditarExploracao from '../../components/EditarExploracao.jsx';
 
 // Formatar valores em euros
 const moeda = (valor) =>
@@ -250,6 +251,9 @@ export default function PainelProdutor() {
           </Link>
         </div>
       </div>
+
+      {/* Editar os dados públicos da exploração */}
+      <EditarExploracao />
 
       {/* Mensagens de erro */}
       {erro && (

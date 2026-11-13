@@ -335,6 +335,64 @@ paths:
               schema:
                 $ref: '#/components/schemas/Erro'
 
+
+  /producers/me:
+    patch:
+      tags: [Produtores]
+      summary: Atualizar os dados da própria exploração
+      operationId: atualizarMinhaExploracao
+      description: >
+        Permite ao produtor autenticado atualizar os dados
+        apresentados na sua página pública. Não permite
+        alterar o papel nem a validação da conta.
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarExploracaoInput'
+
+      responses:
+        '200':
+          description: Dados da exploração atualizados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Utilizador'
+
+        '400':
+          description: Dados inválidos ou campos não permitidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+        '401':
+          description: Token inválido ou em falta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+        '403':
+          description: Utilizador sem permissão
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+        '404':
+          description: Produtor não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+
   /producers/{id}:
     get:
       tags: [Produtores]
@@ -1540,6 +1598,55 @@ components:
     # ----------------------------------------
     # PRODUTORES
     # ----------------------------------------
+
+
+    AtualizarExploracaoInput:
+      type: object
+      description: Dados editáveis da exploração agrícola
+      minProperties: 1
+      additionalProperties: false
+
+      properties:
+        nomeExploracao:
+          type: string
+          minLength: 1
+          maxLength: 150
+          example: Horta da Ribeira
+
+        descricao:
+          type: string
+          maxLength: 1000
+          example: Produção local de hortícolas e fruta.
+
+        localidade:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Ponte de Lima
+
+        localizacao:
+          type: object
+          nullable: true
+          description: >
+            Coordenadas da exploração.
+            Enviar null para remover a localização.
+          additionalProperties: false
+          required: [lat, lng]
+
+          properties:
+            lat:
+              type: number
+              minimum: -90
+              maximum: 90
+              example: 41.53
+
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+              example: -8.62
+
+
 
     ProdutorPublico:
       type: object
