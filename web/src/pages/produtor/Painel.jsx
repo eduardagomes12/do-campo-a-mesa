@@ -174,20 +174,27 @@ export default function PainelProdutor() {
     [produtos]
   );
 
-  // Calcular a média das avaliações
+
+  // Média das avaliações feitas ao produtor,
+  // excluindo avaliações individuais de produtos.
   const avaliacaoMedia = useMemo(() => {
-    if (avaliacoes.length === 0) {
+    const avaliacoesProdutor = avaliacoes.filter(
+      (avaliacao) => avaliacao.produto == null
+    );
+
+    if (avaliacoesProdutor.length === 0) {
       return null;
     }
 
-    const soma = avaliacoes.reduce(
+    const soma = avaliacoesProdutor.reduce(
       (total, avaliacao) =>
         total + Number(avaliacao.classificacao),
       0
     );
 
-    return soma / avaliacoes.length;
+    return soma / avaliacoesProdutor.length;
   }, [avaliacoes]);
+
 
   // Calcular o total de encomendas entregues criadas no mês
   const vendasMes = useMemo(() => {

@@ -165,9 +165,11 @@ router.get('/:id', a(async (req, res) => {
     'nome produtor.localidade produtor.nomeExploracao'
   );
 
-  // Obter as avaliações visíveis do produtor
+  // Apenas avaliações feitas à exploração.
+  // As avaliações de produtos são independentes.
   const avaliacoes = await Review.find({
     produtor: produtor._id,
+    produto: null,
     visivel: true
   }).select('classificacao');
 

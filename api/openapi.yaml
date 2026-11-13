@@ -441,8 +441,10 @@ paths:
       security: []
 
       description: >
-        Devolve os dados do produtor, os seus produtos
-        e a classificação média das avaliações visíveis.
+        Devolve os dados públicos do produtor, os seus
+        produtos e a classificação média das avaliações
+        visíveis feitas à própria exploração, excluindo
+        as avaliações individuais dos produtos.
 
       parameters:
         - name: id
