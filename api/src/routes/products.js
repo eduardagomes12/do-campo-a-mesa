@@ -187,6 +187,20 @@ router.get('/', a(async (req, res) => {
       : { $in: ids };
   }
 
+
+  // Apenas mostrar produtos de produtores aprovados.
+  // Esta condição mantém os restantes filtros do catálogo.
+  const idsAprovados = await User.distinct('_id', {
+    papel: 'produtor',
+    'produtor.validado': true,
+    'produtor.rejeitado': { $ne: true }
+  });
+
+  filtro.$and = [
+    { produtor: { $in: idsAprovados } }
+  ];
+
+
   // Consultar os produtos no MongoDB
   const lista = await Product.find(filtro)
     .sort(ORDENACAO[ordenar] || ORDENACAO.recentes)
@@ -219,22 +233,29 @@ router.get('/', a(async (req, res) => {
 // Consultar um produto pelo identificador
 // ==================================================
 
+
 router.get('/:id', a(async (req, res) => {
   const produto = await Product.findOne({
     _id: req.params.id,
     visivel: { $ne: false }
   })
-    .populate(
-      'produtor',
-      'nome produtor.localidade produtor.nomeExploracao'
-    );
+    .populate({
+      path: 'produtor',
+      select: 'nome produtor.localidade produtor.nomeExploracao',
+      match: {
+        papel: 'produtor',
+        'produtor.validado': true,
+        'produtor.rejeitado': { $ne: true }
+      }
+    });
 
-  if (!produto) {
+  if (!produto || !produto.produtor) {
     throw erro(404, 'Produto não encontrado');
   }
 
   res.json(produto);
 }));
+
 
 
 // ==================================================

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const mongoose = require('mongoose');
 
 const Product = require('../models/Product');
+const User = require('../models/User');
 const Order = require('../models/Order');
 
 const auth = require('../middleware/auth');
@@ -83,6 +84,21 @@ router.post('/', auth('comprador'), a(async (req, res) => {
             `Stock insuficiente: ${existe.nome}`
           );
         }
+
+
+        // Confirmar que o produtor continua aprovado.
+        // Se não estiver, a transação reverte a reserva de stock.
+        const produtorAprovado = await User.exists({
+          _id: produto.produtor,
+          papel: 'produtor',
+          'produtor.validado': true,
+          'produtor.rejeitado': { $ne: true }
+        }).session(session);
+
+        if (!produtorAprovado) {
+          throw erro(409, 'Produto indisponível');
+        }
+
 
 
         // ==========================================
