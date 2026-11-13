@@ -16,13 +16,27 @@ module.exports = (io) => {
         throw new Error('Token sem identificador');
       }
 
+
       // Confirmar que o utilizador ainda existe
       const utilizador = await User.findById(dados.id)
-        .select('nome papel');
+        .select('nome papel produtor.validado produtor.rejeitado');
 
       if (!utilizador) {
         throw new Error('Utilizador inexistente');
       }
+
+      // Impedir novas ligações de produtores não aprovados
+      if (
+        utilizador.papel === 'produtor' &&
+        (
+          utilizador.produtor?.rejeitado ||
+          !utilizador.produtor?.validado
+        )
+      ) {
+        return next(new Error('não autorizado'));
+      }
+
+
 
       // Dados disponíveis nos eventos Socket.io
       socket.user = {

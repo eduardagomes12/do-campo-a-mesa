@@ -190,6 +190,30 @@ router.post('/login', a(async (req, res) => {
     throw erro(401, 'Credenciais inválidas');
   }
 
+
+  // Produtores rejeitados não podem iniciar sessão
+  if (
+    utilizador.papel === 'produtor' &&
+    utilizador.produtor?.rejeitado
+  ) {
+    throw erro(
+      403,
+      'A tua conta de produtor foi rejeitada pelo administrador.'
+    );
+  }
+
+  // Produtores pendentes aguardam a aprovação
+  if (
+    utilizador.papel === 'produtor' &&
+    !utilizador.produtor?.validado
+  ) {
+    throw erro(
+      403,
+      'A tua conta de produtor está a aguardar aprovação do administrador.'
+    );
+  }
+
+
   // Criar o token JWT
   const token = emitirToken(utilizador);
 

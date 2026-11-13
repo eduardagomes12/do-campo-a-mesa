@@ -561,6 +561,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Erro'
 
+        '403':
+          description: Conta de produtor pendente de aprovação ou rejeitada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+
   /auth/eu:
     get:
       tags: [Autenticação]
