@@ -195,7 +195,7 @@ async function fecharExpirados(io) {
   // eventual interrupção do servidor.
   const lista = await Auction.find({
     estado: { $in: ['ativo', 'agendado'] },
-    terminaEm: { $lte: agora }
+    terminaEm: { $lt: agora }
   }).select('_id');
 
   for (const leilao of lista) {
