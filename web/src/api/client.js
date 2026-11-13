@@ -41,3 +41,30 @@ export async function api(
 
   return dados;
 }
+
+
+export async function enviarFicheiro(caminho, ficheiro, token) {
+  const dados = new FormData();
+  dados.append('imagem', ficheiro);
+
+  const resposta = await fetch(`${API_URL}/api${caminho}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: dados
+  });
+
+  const resultado = await resposta.json().catch(() => null);
+
+  if (!resposta.ok) {
+    const erro = new Error(
+      resultado?.erro || `Erro ${resposta.status}`
+    );
+    erro.status = resposta.status;
+    throw erro;
+  }
+
+  return resultado;
+}
+

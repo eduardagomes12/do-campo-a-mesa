@@ -4,7 +4,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
-const porFazer = require('./_naoImplementado');
+const { guardarImagem } = require('../services/imagens');
 const a = require('../utils/async');
 const erro = require('../utils/erro');
 const produtorValidado = require('../middleware/produtorValidado');
@@ -331,17 +331,45 @@ router.delete('/:id', auth('produtor'), a(async (req, res) => {
 
 
 
+
 // ==================================================
 // POST /api/products/:id/imagem
 // Upload da imagem do produto
-// Passo 8: armazenamento na Cloud
 // ==================================================
 
 router.post(
   '/:id/imagem',
   auth('produtor'),
   upload.single('imagem'),
-  porFazer('Upload da imagem do produto')
+  a(async (req, res) => {
+
+    // Verificar se o produto pertence ao produtor
+    const produto = await Product.findOne({
+      _id: req.params.id,
+      produtor: req.user.id
+    });
+
+    if (!produto) {
+      throw erro(404, 'Produto não encontrado');
+    }
+
+    // Verificar se foi enviada uma imagem
+    if (!req.file) {
+      throw erro(400, 'Seleciona uma imagem');
+    }
+
+    // Guardar a imagem
+    const imagemUrl = await guardarImagem(req.file, req);
+
+    // Associar a imagem ao produto no MongoDB
+    produto.imagemUrl = imagemUrl;
+    await produto.save();
+
+    // Resposta HTTP 200
+    res.json({
+      imagemUrl: produto.imagemUrl
+    });
+  })
 );
 
 

@@ -15,6 +15,12 @@ app.use(cors({
 
 app.use(express.json({ limit: '1mb' }));
 
+// Disponibilizar imagens guardadas localmente
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '..', 'uploads'))
+);
+
 
 // Passo 5: documentação OpenAPI em /api-docs
 const openapi = YAML.load(path.join(__dirname, '..', 'openapi.yaml'));

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
-import { api } from '../../api/client.js';
+import { api, enviarFicheiro } from '../../api/client.js';
 
 const CATEGORIAS = [
   'Hortícolas',
@@ -54,6 +54,8 @@ export default function ProdutosProdutor() {
   // Estado do formulário
   const [formulario, setFormulario] = useState(VAZIO);
   const [editarId, setEditarId] = useState(null);
+  const [imagem, setImagem] = useState(null);
+  const campoImagemRef = useRef(null);
 
   // Estado das operações
   const [ocupado, setOcupado] = useState(false);
@@ -83,10 +85,51 @@ export default function ProdutosProdutor() {
     }));
   }
 
+
+
+  function limparSelecaoImagem() {
+    setImagem(null);
+
+    if (campoImagemRef.current) {
+      campoImagemRef.current.value = '';
+    }
+  }
+
+  function selecionarImagem(evento) {
+    const ficheiro = evento.target.files?.[0] || null;
+
+    if (!ficheiro) {
+      setImagem(null);
+      return;
+    }
+
+    const formatos = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    if (
+      !formatos.includes(ficheiro.type) ||
+      ficheiro.size > 5 * 1024 * 1024
+    ) {
+      setErro(
+        'A imagem deve ser JPEG, PNG ou WebP e ter até 5 MB.'
+      );
+      limparSelecaoImagem();
+      return;
+    }
+
+    setImagem(ficheiro);
+    setErro('');
+  }
+
+
   // Limpar formulário
   function limparFormulario() {
     setFormulario({ ...VAZIO, epocas: [] });
     setEditarId(null);
+    limparSelecaoImagem();
   }
 
   // ==========================================
@@ -97,6 +140,7 @@ export default function ProdutosProdutor() {
     setEditarId(produto._id);
     setErro('');
     setSucesso('');
+    limparSelecaoImagem()
 
     setFormulario({
       nome: produto.nome || '',
@@ -119,6 +163,7 @@ export default function ProdutosProdutor() {
   // CRIAR OU ATUALIZAR PRODUTO
   // ==========================================
 
+  
   async function guardar(evento) {
     evento.preventDefault();
 
@@ -133,7 +178,6 @@ export default function ProdutosProdutor() {
     const preco = Number(formulario.preco);
     const stock = Number(formulario.stock);
 
-    // Validar os campos obrigatórios
     if (
       !formulario.nome.trim() ||
       !formulario.unidade.trim() ||
@@ -148,7 +192,6 @@ export default function ProdutosProdutor() {
       return;
     }
 
-    // Preparar os dados para a API
     const corpo = {
       nome: formulario.nome.trim(),
       descricao: formulario.descricao.trim(),
@@ -163,6 +206,8 @@ export default function ProdutosProdutor() {
     setOcupado(true);
 
     try {
+      let idProduto = editarId;
+
       if (editarId) {
         // Atualizar produto existente
         await api(`/products/${editarId}`, {
@@ -170,18 +215,45 @@ export default function ProdutosProdutor() {
           corpo,
           token
         });
-
-        setSucesso('Produto atualizado com sucesso.');
       } else {
-        // Criar novo produto
-        await api('/products', {
+        // Criar produto e obter o seu ID
+        const criado = await api('/products', {
           metodo: 'POST',
           corpo,
           token
         });
 
-        setSucesso('Produto criado com sucesso.');
+        idProduto = criado._id;
       }
+
+      // Enviar a fotografia, quando selecionada
+      if (imagem) {
+        try {
+          await enviarFicheiro(
+            `/products/${idProduto}/imagem`,
+            imagem,
+            token
+          );
+        } catch (falhaImagem) {
+          // O produto já existe na BD.
+          // Mantemos o formulário em edição para
+          // permitir repetir o upload sem o duplicar.
+          setEditarId(idProduto);
+          await recarregar();
+
+          setErro(
+            `O produto foi guardado, mas a fotografia falhou: ` +
+            `${falhaImagem.message}. Podes tentar guardar novamente.`
+          );
+          return;
+        }
+      }
+
+      setSucesso(
+        editarId
+          ? 'Produto atualizado com sucesso.'
+          : 'Produto criado com sucesso.'
+      );
 
       limparFormulario();
       await recarregar();
@@ -432,6 +504,33 @@ export default function ProdutosProdutor() {
                     disabled={ocupado}
                   />
                 </div>
+
+
+                {/* Fotografia do produto */}
+                <div className="mb-3">
+                  <label
+                    htmlFor="imagem"
+                    className="form-label"
+                  >
+                    Fotografia do produto (opcional)
+                  </label>
+
+                  <input
+                    ref={campoImagemRef}
+                    id="imagem"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="form-control"
+                    onChange={selecionarImagem}
+                    disabled={ocupado}
+                  />
+
+                  <div className="form-text">
+                    JPEG, PNG ou WebP até 5 MB.
+                    Ao editar, deixar vazio mantém a fotografia atual.
+                  </div>
+                </div>
+
 
                 {/* Produto biológico */}
                 <div className="form-check mb-3">

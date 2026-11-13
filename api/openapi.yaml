@@ -1673,13 +1673,11 @@ paths:
       operationId: enviarImagemProduto
 
       description: >
-        Permite a um produtor autenticado enviar
-        a imagem de um produto.
-        Utiliza multipart/form-data e o campo imagem.
-        O limite configurado no Multer é de 5 MB.
-        O armazenamento na Cloud será implementado
-        no Passo 8. Atualmente, um pedido autorizado
-        devolve HTTP 501.
+        Permite ao produtor responsável enviar a imagem
+        de um produto, através de multipart/form-data.
+        Aceita JPEG, PNG e WebP até 5 MB.
+        Guarda localmente em desenvolvimento e no
+        Azure Blob Storage quando este está configurado.
 
       security:
         - bearerAuth: []
@@ -1740,24 +1738,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Erro'
 
-        '501':
-          description: >
-            Upload ainda não implementado.
-            Será desenvolvido no Passo 8.
+        '404':
+          description: Produto não encontrado ou não pertence ao produtor
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  erro:
-                    type: string
-                    example: Por implementar
-                  endpoint:
-                    type: string
-                    example: POST /api/products/507f1f77bcf86cd799439011/imagem
-                  descricao:
-                    type: string
-                    example: Upload da imagem do produto
+                $ref: '#/components/schemas/Erro'
 
 
 
