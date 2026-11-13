@@ -14,8 +14,10 @@ info:
   description: API REST do mercado digital de produtores locais.
 
 servers:
-  - url: http://localhost:3000/api
-    description: Servidor atual
+  - url: https://dcm-api-eduarda.onrender.com
+    description: Render - Produção
+  - url: http://localhost:3000
+    description: Local - Desenvolvimento
 
 paths:
 
