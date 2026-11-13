@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../api/client.js';
 import EstadoEncomenda from '../../components/EstadoEncomenda.jsx';
 import EditarExploracao from '../../components/EditarExploracao.jsx';
+import MeusLeiloes from '../../components/MeusLeiloes.jsx';
 
 // Formatar valores em euros
 const moeda = (valor) =>
@@ -254,6 +255,9 @@ export default function PainelProdutor() {
 
       {/* Editar os dados públicos da exploração */}
       <EditarExploracao />
+
+      {/* Acompanhamento dos leilões do produtor */}
+      <MeusLeiloes />
 
       {/* Mensagens de erro */}
       {erro && (

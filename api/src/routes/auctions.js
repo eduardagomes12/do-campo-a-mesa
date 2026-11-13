@@ -31,6 +31,20 @@ router.get('/', a(async (req, res) => {
 }));
 
 
+
+ // GET /api/auctions/me
+ // Listar todos os leilões do produtor autenticado
+ router.get('/me', auth('produtor'), a(async (req, res) => {
+   const leiloes = await Auction.find({
+     produtor: req.user.id
+   })
+     .sort({ createdAt: -1 })
+     .populate('produto', 'nome unidade');
+
+   res.json(leiloes);
+ }));
+
+
 // GET /api/auctions/:id  -> 200 leilão + últimas licitações
 
 router.get('/:id', a(async (req, res) => {
