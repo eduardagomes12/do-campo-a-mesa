@@ -610,6 +610,10 @@ paths:
         O stock é reservado numa transação MongoDB.
         Os produtos são agrupados por produtor,
         criando uma encomenda para cada produtor.
+        O levantamento é o tipo de entrega por omissão.
+        Quando o tipo é entrega, a morada é obrigatória
+        e não pode estar vazia nem conter apenas espaços.
+
 
       security:
         - bearerAuth: []
@@ -2131,7 +2135,11 @@ components:
 
         morada:
           type: string
-          description: Morada quando o tipo é entrega
+          description: >
+            Obrigatória quando o tipo é entrega.
+            Deve conter texto não vazio após remover
+            os espaços em branco.
+
 
     CriarEncomendaInput:
       type: object

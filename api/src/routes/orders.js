@@ -25,6 +25,24 @@ router.post('/', auth('comprador'), a(async (req, res) => {
     );
   }
 
+
+  // Validar o tipo de entrega antes de reservar stock
+  const tipoEntrega = entrega?.tipo || 'levantamento';
+
+  if (!['levantamento', 'entrega'].includes(tipoEntrega)) {
+    throw erro(400, 'Tipo de entrega inválido');
+  }
+
+  // Exigir morada apenas nas entregas ao domicílio
+  const moradaEntrega = typeof entrega?.morada === 'string'
+    ? entrega.morada.trim()
+    : '';
+
+  if (tipoEntrega === 'entrega' && !moradaEntrega) {
+    throw erro(400, 'Indica a morada de entrega');
+  }
+
+
   // Todas as reservas e encomendas fazem parte
   // da mesma transação MongoDB.
   const criadas = await mongoose.connection.transaction(
@@ -130,9 +148,12 @@ router.post('/', auth('comprador'), a(async (req, res) => {
           produtor,
           linhas: ls,
           entrega: {
-            tipo: entrega?.tipo || 'levantamento',
-            morada: entrega?.morada
+            tipo: tipoEntrega,
+            ...(tipoEntrega === 'entrega'
+              ? { morada: moradaEntrega }
+              : {})
           }
+
         })
       );
 
