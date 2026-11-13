@@ -14,6 +14,14 @@ export default function Produtor() {
     aCarregar
   } = useApi(`/producers/${id}`);
 
+  // Consultar avaliações públicas do produtor
+  const {
+    dados: dadosAvaliacoes,
+    erro: erroAvaliacoes,
+    aCarregar: aCarregarAvaliacoes
+  } = useApi(`/reviews?produtor=${id}`);
+
+
   const { utilizador } = useAuth();
   const carrinho = useCarrinho();
 
@@ -54,6 +62,14 @@ export default function Produtor() {
   const localidade = exploracao.localidade;
   const descricao = exploracao.descricao;
   const avaliacaoMedia = dados.avaliacaoMedia;
+
+
+  // Apenas avaliações feitas à exploração.
+  // Avaliações de produtos aparecem na página de cada produto.
+  const avaliacoes = Array.isArray(dadosAvaliacoes)
+    ? dadosAvaliacoes.filter(avaliacao => avaliacao.produto == null)
+    : [];
+
 
   // Localização para apresentar no mapa
   const coordenadas = exploracao.localizacao;
@@ -167,6 +183,65 @@ export default function Produtor() {
 
         </div>
       </section>
+
+
+
+      {/* Avaliações públicas da exploração */}
+      <section className="mb-5" aria-labelledby="titulo-avaliacoes">
+        <h2 id="titulo-avaliacoes" className="mb-4">
+          Avaliações de {nomeExploracao}
+        </h2>
+
+        {aCarregarAvaliacoes ? (
+          <p role="status">A carregar avaliações...</p>
+        ) : erroAvaliacoes ? (
+          <div className="alert alert-danger" role="alert">
+            Não foi possível carregar as avaliações: {erroAvaliacoes}
+          </div>
+        ) : avaliacoes.length === 0 ? (
+          <p className="texto-secundario">
+            Ainda não existem avaliações desta exploração.
+          </p>
+        ) : (
+          <div className="row g-3">
+            {avaliacoes.map(avaliacao => (
+              <div className="col-12 col-md-6" key={avaliacao._id}>
+                <article className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                      <strong>
+                        {avaliacao.autor?.nome || 'Comprador'}
+                      </strong>
+
+                      <span
+                        className="text-warning"
+                        aria-label={`${avaliacao.classificacao} de 5 estrelas`}
+                      >
+                        <span aria-hidden="true">
+                          {'★'.repeat(avaliacao.classificacao)}
+                          {'☆'.repeat(5 - avaliacao.classificacao)}
+                        </span>
+                      </span>
+                    </div>
+
+                    {avaliacao.createdAt && (
+                      <p className="texto-secundario small mb-2">
+                        {new Date(avaliacao.createdAt).toLocaleDateString('pt-PT')}
+                      </p>
+                    )}
+
+                    <p className="mb-0">
+                      {avaliacao.comentario ||
+                        'Avaliação sem comentário escrito.'}
+                    </p>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
 
       {/* Produtos do produtor */}
       <section aria-labelledby="titulo-produtos">
