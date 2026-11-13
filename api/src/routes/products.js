@@ -80,6 +80,10 @@ router.get('/', a(async (req, res) => {
 
   const filtro = {};
 
+  // Os produtos ocultados pelo administrador não são públicos.
+  // $ne: false também inclui os produtos antigos sem este campo.
+  filtro.visivel = { $ne: false };
+
   // Pesquisa por nome ou descrição do produto
   // e nome do produtor ou da exploração.
   if (q) {
@@ -195,6 +199,20 @@ router.get('/', a(async (req, res) => {
 }));
 
 
+ // GET /api/products/me
+ // O produtor consulta todos os seus produtos,
+ // incluindo os ocultados pelo administrador.
+ router.get('/me', auth('produtor'), a(async (req, res) => {
+   const produtos = await Product.find({
+     produtor: req.user.id
+   })
+     .sort({ createdAt: -1 });
+
+   res.json(produtos);
+ }));
+
+
+
 
 // ==================================================
 // GET /api/products/:id
@@ -202,7 +220,10 @@ router.get('/', a(async (req, res) => {
 // ==================================================
 
 router.get('/:id', a(async (req, res) => {
-  const produto = await Product.findById(req.params.id)
+  const produto = await Product.findOne({
+    _id: req.params.id,
+    visivel: { $ne: false }
+  })
     .populate(
       'produtor',
       'nome produtor.localidade produtor.nomeExploracao'

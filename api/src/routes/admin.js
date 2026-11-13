@@ -1,4 +1,3 @@
-
 // Painel do administrador
 
 const router = require('express').Router();
@@ -11,6 +10,7 @@ const Review = require('../models/Review');
 
 const a = require('../utils/async');
 const erro = require('../utils/erro');
+const Product = require('../models/Product');
 
 // Todas as rotas exigem administrador autenticado
 router.use(auth('admin'));
@@ -166,6 +166,57 @@ router.patch('/reviews/:id', a(async (req, res) => {
   }
 
   res.json(avaliacao);
+}));
+
+
+
+// ==========================================
+// GET /api/admin/produtos
+// Consultar produtos para moderação
+// ==========================================
+
+router.get('/produtos', a(async (req, res) => {
+  const produtos = await Product.find()
+    .sort({ createdAt: -1 })
+    .populate(
+      'produtor',
+      'nome produtor.nomeExploracao'
+    );
+
+  res.json(produtos);
+}));
+
+// ==========================================
+// PATCH /api/admin/produtos/:id/visibilidade
+// Ocultar ou voltar a publicar um produto
+// ==========================================
+
+router.patch('/produtos/:id/visibilidade', a(async (req, res) => {
+  const { visivel } = req.body || {};
+
+  if (typeof visivel !== 'boolean') {
+    throw erro(
+      400,
+      'O campo visivel deve ser booleano'
+    );
+  }
+
+  const produto = await Product.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: { visivel }
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  );
+
+  if (!produto) {
+    throw erro(404, 'Produto não encontrado');
+  }
+
+  res.json(produto);
 }));
 
 module.exports = router;

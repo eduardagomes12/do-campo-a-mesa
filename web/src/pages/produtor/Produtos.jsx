@@ -39,8 +39,7 @@ const euro = (valor) =>
   });
 
 export default function ProdutosProdutor() {
-  const { utilizador, token } = useAuth();
-  const produtorId = utilizador?.id || utilizador?._id;
+  const { token } = useAuth();
 
   // Consultar os produtos do produtor
   const {
@@ -48,11 +47,7 @@ export default function ProdutosProdutor() {
     erro: erroConsulta,
     aCarregar,
     recarregar
-  } = useApi(
-    produtorId
-      ? `/products?produtor=${encodeURIComponent(produtorId)}`
-      : null
-  );
+  } = useApi('/products/me');
 
   const produtos = Array.isArray(dados) ? dados : [];
 
@@ -586,6 +581,12 @@ export default function ProdutosProdutor() {
                             <strong>
                               {produto.nome}
                             </strong>
+
+                            {produto.visivel === false && (
+                              <span className="badge text-bg-warning ms-2">
+                                Oculto pelo administrador
+                              </span>
+                            )}
 
                             <div className="small texto-secundario">
                               {produto.categoria}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../api/client.js';
 import { useSocket } from '../../context/SocketContext.jsx';
+import ModeracaoProdutos from '../../components/ModeracaoProdutos.jsx';
 
 const moeda = (valor) =>
   Number(valor || 0).toLocaleString('pt-PT', {
@@ -408,6 +409,9 @@ export default function PainelAdmin() {
               </div>
             )}
           </section>
+
+          {/* Moderação dos produtos da plataforma */}
+          <ModeracaoProdutos />
 
           {/* Leilões ativos */}
           <section className="mb-5">

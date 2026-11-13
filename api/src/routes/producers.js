@@ -158,7 +158,8 @@ router.get('/:id', a(async (req, res) => {
 
   // Obter os produtos do produtor
   const produtos = await Product.find({
-    produtor: produtor._id
+    produtor: produtor._id,
+    visivel: { $ne: false }
   }).populate(
     'produtor',
     'nome produtor.localidade produtor.nomeExploracao'

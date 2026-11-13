@@ -111,16 +111,19 @@ router.post(
     }
 
     // Verificar que o produto pertence ao produtor
+
     if (produto) {
       const existe = await Product.exists({
         _id: produto,
-        produtor: req.user.id
+        produtor: req.user.id,
+        visivel: { $ne: false }
       });
 
       if (!existe) {
-        throw erro(404, 'Produto não encontrado');
+        throw erro(404, 'Produto não encontrado ou indisponível');
       }
     }
+
 
     // Calcular o início e o fim
     const agora = new Date();

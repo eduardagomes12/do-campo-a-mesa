@@ -50,7 +50,8 @@ router.post('/', auth('comprador'), a(async (req, res) => {
         const produto = await Product.findOneAndUpdate(
           {
             _id: linha.produto,
-            stock: { $gte: quantidade }
+            stock: { $gte: quantidade },
+            visivel: { $ne: false }
           },
           {
             $inc: { stock: -quantidade }
@@ -62,19 +63,27 @@ router.post('/', auth('comprador'), a(async (req, res) => {
         );
 
         // Stock insuficiente ou produto inexistente
+
         if (!produto) {
           const existe = await Product
             .findById(linha.produto)
-            .select('nome')
+            .select('nome visivel')
             .session(session);
+
+          if (!existe) {
+            throw erro(404, 'Produto não encontrado');
+          }
+
+          if (existe.visivel === false) {
+            throw erro(409, 'Produto indisponível');
+          }
 
           throw erro(
             409,
-            existe
-              ? `Stock insuficiente: ${existe.nome}`
-              : 'Produto não encontrado'
+            `Stock insuficiente: ${existe.nome}`
           );
         }
+
 
         // ==========================================
         // AGRUPAR PRODUTOS POR PRODUTOR

@@ -78,9 +78,7 @@ export default function PainelProdutor() {
         listaEncomendas,
         listaAvaliacoes
       ] = await Promise.all([
-        api(
-          `/products?produtor=${encodeURIComponent(produtorId)}`
-        ),
+        api('/products/me', { token }),
         api('/orders', { token }),
         api(
           `/reviews?produtor=${encodeURIComponent(produtorId)}`
@@ -406,8 +404,15 @@ export default function PainelProdutor() {
                   <tbody>
                     {produtos.map((produto) => (
                       <tr key={produto._id}>
+
                         <td>
-                          {produto.nome}
+                          <strong>{produto.nome}</strong>
+
+                          {produto.visivel === false && (
+                            <span className="badge text-bg-warning ms-2">
+                              Oculto pelo administrador
+                            </span>
+                          )}
                         </td>
 
                         <td>

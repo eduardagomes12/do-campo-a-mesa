@@ -74,8 +74,16 @@ const productSchema = new Schema({
     ]
   }],
 
+
   // Imagem do produto (Passo 8)
-  imagemUrl: String
+  imagemUrl: String,
+
+  // Moderação: só o administrador pode alterar
+  visivel: {
+    type: Boolean,
+    default: true
+  }
+
 
 }, { timestamps: true });
 
