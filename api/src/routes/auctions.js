@@ -159,6 +159,14 @@ router.post(
       estado: inicio <= agora ? 'ativo' : 'agendado'
     });
 
+
+    // Avisar os administradores após a criação
+    // do leilão ter sido confirmada no MongoDB.
+    const io = req.app.get('io');
+
+    io?.to('admin:leiloes').emit('leiloes-atualizados');
+
+
     res.status(201).json(leilao);
   })
 );
