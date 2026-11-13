@@ -1205,17 +1205,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Erro'
 
+
   /reviews/{id}/denuncia:
     post:
       tags: [Avaliações]
       summary: Denunciar uma avaliação
       operationId: denunciarAvaliacao
-
       description: >
-        Permite a um utilizador autenticado denunciar
-        uma avaliação. Incrementa o contador de
-        denúncias da avaliação.
-        A moderação é realizada pelo administrador.
+        Permite a um comprador autenticado denunciar
+        uma avaliação pública de outro comprador.
+        Cada comprador só pode denunciar a mesma
+        avaliação uma vez. A denúncia é encaminhada
+        para moderação administrativa.
 
       security:
         - bearerAuth: []
@@ -1230,7 +1231,7 @@ paths:
 
       responses:
         '204':
-          description: Denúncia registada, sem corpo de resposta
+          description: Denúncia registada com sucesso
 
         '400':
           description: Identificador inválido
@@ -1246,12 +1247,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/Erro'
 
+        '403':
+          description: Sem permissão ou avaliação do próprio comprador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
         '404':
           description: Avaliação não encontrada
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Erro'
+
+        '409':
+          description: Avaliação indisponível ou já denunciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
 
 
 

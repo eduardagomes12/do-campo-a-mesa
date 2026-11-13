@@ -18,6 +18,18 @@ const reviewSchema = new Schema({
     maxlength: 1000
   },
   denuncias: { type: Number, default: 0 },
+
+  // Guardar quem já denunciou a avaliação
+
+  denunciadoPor: {
+    type: [{
+      type: Types.ObjectId,
+      ref: 'User'
+    }],
+    default: [],
+    select: false
+  },
+
   visivel: { type: Boolean, default: true }
 }, { timestamps: true });
 

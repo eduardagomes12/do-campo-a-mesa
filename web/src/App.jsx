@@ -1,5 +1,4 @@
-
- // Passo 2: routing no cliente
+// Passo 2: routing no cliente
  import { Routes, Route } from 'react-router-dom';
  import Navbar from './components/Navbar.jsx';
  import RotaProtegida from './components/RotaProtegida.jsx';
@@ -16,6 +15,7 @@
  import ProdutosProdutor from './pages/produtor/Produtos.jsx';
  import PainelAdmin from './pages/admin/Painel.jsx';
  import NaoEncontrado from './pages/NaoEncontrado.jsx';
+ import Produto from './pages/Produto.jsx';
 
  // Passo 7: Socket.io e notificações em tempo real
  import { SocketProvider } from './context/SocketContext.jsx';
@@ -41,6 +41,7 @@
            <Route path="/leiloes" element={<Leiloes />} />
            <Route path="/login" element={<Login />} />
            <Route path="/registo" element={<Registo />} />
+           <Route path="/produtos/:id" element={<Produto />} />
 
            {/* Comprador */}
 

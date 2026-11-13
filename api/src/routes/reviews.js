@@ -161,21 +161,47 @@ router.get('/', a(async (req, res) => {
 }));
 
 
-// POST /api/reviews/:id/denuncia
-// Denunciar avaliação
 
-router.post('/:id/denuncia', auth(), a(async (req, res) => {
-  const avaliacao = await Review.findByIdAndUpdate(
-    req.params.id,
-    { $inc: { denuncias: 1 } },
-    { new: true }
-  );
+ // POST /api/reviews/:id/denuncia
+ // Cada comprador só pode denunciar uma avaliação uma vez.
+ router.post('/:id/denuncia', auth('comprador'), a(async (req, res) => {
+   if (!isValidObjectId(req.params.id)) {
+     throw erro(400, 'Identificador da avaliação inválido');
+   }
 
-  if (!avaliacao) {
-    throw erro(404, 'Avaliação não encontrada');
-  }
+   const avaliacao = await Review.findOneAndUpdate(
+     {
+       _id: req.params.id,
+       visivel: true,
+       autor: { $ne: req.user.id },
+       denunciadoPor: { $ne: req.user.id }
+     },
+     {
+       $addToSet: { denunciadoPor: req.user.id },
+       $inc: { denuncias: 1 }
+     },
+     { new: true }
+   );
 
-  res.status(204).end();
-}));
+   if (avaliacao) {
+     return res.status(204).end();
+   }
+
+   const existente = await Review.findById(req.params.id);
+
+   if (!existente) {
+     throw erro(404, 'Avaliação não encontrada');
+   }
+
+   if (String(existente.autor) === String(req.user.id)) {
+     throw erro(403, 'Não podes denunciar a tua própria avaliação');
+   }
+
+   if (existente.visivel === false) {
+     throw erro(409, 'Avaliação indisponível');
+   }
+
+   throw erro(409, 'Já denunciaste esta avaliação');
+ }));
 
 module.exports = router;

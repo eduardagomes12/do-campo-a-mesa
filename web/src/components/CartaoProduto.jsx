@@ -99,6 +99,16 @@ export default function CartaoProduto({
           </span>
         </p>
 
+
+        {/* Consultar os detalhes e as avaliações */}
+        <Link
+          to={`/produtos/${produto._id}`}
+          className="btn btn-outline-success w-100 mb-2"
+        >
+          Ver detalhes e avaliações
+        </Link>
+
+
         {/* Adicionar ao carrinho */}
         {onAdicionar && (
           <button
