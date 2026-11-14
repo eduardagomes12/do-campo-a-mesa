@@ -9,18 +9,13 @@ A aplicação permite aproximar produtores locais e compradores através de uma 
 ## 1. Aplicação publicada
 
 | Serviço | Endereço |
-
 |---|---|
-
 | Frontend React | https://blue-moss-0a0dea503.4.azurestaticapps.net |
-
 | Backend REST | https://dcm-api-eduarda.onrender.com |
-
 | Documentação Swagger | https://dcm-api-eduarda.onrender.com/api-docs |
-
 | Health Check | https://dcm-api-eduarda.onrender.com/api/health |
-
 | Repositório GitHub | https://github.com/eduardagomes12/do-campo-a-mesa |
+
 
 O frontend encontra-se alojado no Azure Static Web Apps e o backend no Render. A persistência é assegurada pelo MongoDB Atlas, enquanto as imagens dos produtos são armazenadas no Azure Blob Storage.
 
@@ -311,21 +306,16 @@ A aplicação utiliza MongoDB Atlas, através da biblioteca Mongoose.
 
 Foram definidos seis modelos principais:
 
+
 | Modelo | Finalidade |
-
 |---|---|
-
 | User | Contas, papéis e dados dos produtores |
-
 | Product | Produtos disponíveis no catálogo |
-
 | Order | Encomendas e respetivas linhas |
-
 | Auction | Leilões, datas, regras e licitação atual |
-
 | Bid | Histórico de licitações |
-
 | Review | Avaliações de produtos e produtores |
+
 
 ### Decisões de modelação
 
@@ -356,23 +346,17 @@ A API segue uma organização baseada em recursos e utiliza os métodos HTTP ade
 
 Os principais recursos são:
 
+
 | Prefixo | Responsabilidade |
-
 |---|---|
-
 | `/api/auth` | Registo, login e utilizador autenticado |
-
 | `/api/products` | Catálogo e gestão de produtos |
-
 | `/api/producers` | Informação dos produtores |
-
 | `/api/orders` | Criação e gestão de encomendas |
-
 | `/api/auctions` | Gestão e consulta de leilões |
-
 | `/api/reviews` | Avaliações e denúncias |
-
 | `/api/admin` | Administração e moderação |
+
 
 A API utiliza códigos HTTP como `200`, `201`, `204`, `400`, `401`, `403`, `404` e `409`, conforme o resultado de cada operação.
 
@@ -507,19 +491,15 @@ Os testes automatizados que criam ou alteram dados devem ser executados num ambi
 
 A solução encontra-se distribuída por diferentes serviços Cloud.
 
+
 | Componente | Serviço | Modelo |
-
 |---|---|---|
-
 | Frontend | Azure Static Web Apps | PaaS |
-
 | Backend | Render Web Service | PaaS |
-
 | Base de dados | MongoDB Atlas | DBaaS |
-
 | Imagens | Azure Blob Storage | Serviço gerido de armazenamento |
-
 | CI/CD do frontend | GitHub Actions | Serviço gerido de automação |
+
 
 ### Frontend
 
