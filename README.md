@@ -9,11 +9,17 @@ A aplicação permite aproximar produtores locais e compradores através de uma 
 ## 1. Aplicação publicada
 
 | Serviço | Endereço |
+
 |---|---|
+
 | Frontend React | https://blue-moss-0a0dea503.4.azurestaticapps.net |
+
 | Backend REST | https://dcm-api-eduarda.onrender.com |
+
 | Documentação Swagger | https://dcm-api-eduarda.onrender.com/api-docs |
+
 | Health Check | https://dcm-api-eduarda.onrender.com/api/health |
+
 | Repositório GitHub | https://github.com/eduardagomes12/do-campo-a-mesa |
 
 O frontend encontra-se alojado no Azure Static Web Apps e o backend no Render. A persistência é assegurada pelo MongoDB Atlas, enquanto as imagens dos produtos são armazenadas no Azure Blob Storage.
@@ -25,31 +31,49 @@ O frontend encontra-se alojado no Azure Static Web Apps e o backend no Render. A
 ### Frontend
 
 - React 18
+
 - Vite 5
+
 - React Router 6
+
 - Bootstrap 5
+
 - SASS/SCSS
+
 - Context API e hooks React
+
 - Socket.io Client
 
 ### Backend
 
 - Node.js
+
 - Express 4
+
 - MongoDB e Mongoose
+
 - Socket.io
+
 - JSON Web Tokens (JWT)
+
 - bcryptjs
+
 - Multer
+
 - Swagger UI e OpenAPI 3.0
 
 ### Cloud e ferramentas
 
 - Azure Static Web Apps — alojamento do frontend
+
 - Render — alojamento da API e do servidor Socket.io
+
 - MongoDB Atlas — base de dados NoSQL
+
 - Azure Blob Storage — armazenamento das imagens
+
 - GitHub Actions — integração e publicação contínuas
+
 - Git e GitHub — controlo de versões
 
 ## 3. Arquitetura
@@ -64,7 +88,6 @@ flowchart TD
     S[Socket.io - Render]
     M[(MongoDB Atlas)]
     B[(Azure Blob Storage)]
-
     U --> F
     F -->|HTTPS / REST / JWT| A
     F <-->|WebSockets| S
@@ -82,33 +105,53 @@ O servidor Express e o servidor Socket.io partilham o mesmo servidor HTTP, estan
 ### Visitante
 
 - Consultar o catálogo de produtos.
+
 - Pesquisar produtos por nome.
+
 - Filtrar produtos por categoria e outros critérios disponíveis.
+
 - Consultar os detalhes de um produto.
+
 - Consultar perfis públicos dos produtores.
+
 - Visualizar os leilões disponíveis.
+
 - Criar uma conta e iniciar sessão.
 
 ### Comprador
 
 - Autenticação através de JWT.
+
 - Adicionar produtos ao carrinho.
+
 - Criar e consultar encomendas.
+
 - Consultar o estado das encomendas.
+
 - Avaliar produtos e produtores após a entrega.
+
 - Participar em leilões em tempo real.
+
 - Consultar o histórico de licitações.
+
 - Receber notificações sobre o resultado dos leilões e alterações das encomendas.
 
 ### Produtor
 
 - Gerir os dados da exploração.
+
 - Criar, consultar, editar e remover produtos.
+
 - Carregar fotografias dos produtos.
+
 - Consultar e gerir as encomendas recebidas.
+
 - Atualizar os estados das encomendas.
+
 - Criar e acompanhar leilões.
+
 - Consultar as licitações e os resultados dos leilões.
+
 - Receber notificações em tempo real.
 
 O acesso às funcionalidades de produtor depende da validação da conta pelo administrador.
@@ -116,9 +159,13 @@ O acesso às funcionalidades de produtor depende da validação da conta pelo ad
 ### Administrador
 
 - Validar ou rejeitar pedidos de registo de produtores.
+
 - Consultar estatísticas da plataforma.
+
 - Moderar produtos.
+
 - Consultar e moderar avaliações denunciadas.
+
 - Acompanhar os leilões através do painel administrativo.
 
 ## 5. Estrutura do projeto
@@ -165,8 +212,11 @@ do-campo-a-mesa/
 ### 6.1. Pré-requisitos
 
 - Node.js 20 ou superior
+
 - npm
+
 - Acesso a uma instância MongoDB compatível com Mongoose
+
 - Git
 
 Para testar todas as funcionalidades de carregamento de imagens, é necessária uma configuração válida de armazenamento.
@@ -192,13 +242,10 @@ Criar o ficheiro `api/.env` com as variáveis necessárias:
 ```dotenv
 PORT=3000
 NODE_ENV=development
-
 MONGODB_URI=<connection-string-mongodb>
 JWT_SECRET=<segredo-jwt>
 JWT_EXPIRES_IN=2h
-
 CLIENT_URL=http://localhost:5173
-
 STORAGE_CONN=<connection-string-azure-storage>
 STORAGE_CONTAINER=produtos
 ```
@@ -216,7 +263,9 @@ npm run dev
 A API ficará disponível em:
 
 - http://localhost:3000/api/health
+
 - http://localhost:3000/api/products
+
 - http://localhost:3000/api-docs
 
 ### 6.4. Configurar o frontend
@@ -263,12 +312,19 @@ A aplicação utiliza MongoDB Atlas, através da biblioteca Mongoose.
 Foram definidos seis modelos principais:
 
 | Modelo | Finalidade |
+
 |---|---|
+
 | User | Contas, papéis e dados dos produtores |
+
 | Product | Produtos disponíveis no catálogo |
+
 | Order | Encomendas e respetivas linhas |
+
 | Auction | Leilões, datas, regras e licitação atual |
+
 | Bid | Histórico de licitações |
+
 | Review | Avaliações de produtos e produtores |
 
 ### Decisões de modelação
@@ -301,13 +357,21 @@ A API segue uma organização baseada em recursos e utiliza os métodos HTTP ade
 Os principais recursos são:
 
 | Prefixo | Responsabilidade |
+
 |---|---|
+
 | `/api/auth` | Registo, login e utilizador autenticado |
+
 | `/api/products` | Catálogo e gestão de produtos |
+
 | `/api/producers` | Informação dos produtores |
+
 | `/api/orders` | Criação e gestão de encomendas |
+
 | `/api/auctions` | Gestão e consulta de leilões |
+
 | `/api/reviews` | Avaliações e denúncias |
+
 | `/api/admin` | Administração e moderação |
 
 A API utiliza códigos HTTP como `200`, `201`, `204`, `400`, `401`, `403`, `404` e `409`, conforme o resultado de cada operação.
@@ -335,7 +399,9 @@ O middleware de autenticação verifica a validade do token e as permissões ass
 Os papéis considerados são:
 
 - Comprador
+
 - Produtor
+
 - Administrador
 
 O registo público não permite criar contas de administrador.
@@ -353,12 +419,19 @@ Cada leilão possui uma sala própria, permitindo transmitir eventos apenas aos 
 O sistema inclui:
 
 - Entrada e saída das salas.
+
 - Contagem de participantes.
+
 - Licitações em tempo real.
+
 - Atualização do maior valor.
+
 - Histórico de licitações.
+
 - Abertura e encerramento automático dos leilões.
+
 - Notificações a compradores e produtores.
+
 - Criação de encomenda para o vencedor.
 
 ### Consistência das licitações
@@ -396,13 +469,36 @@ npm test
 
 A suite inclui sete testes automatizados, incluindo validações de autenticação, autorização e concorrência.
 
+### Resultado da última execução
+
+Na última execução de `npm test`, **6 dos 7 testes foram aprovados**. As seis verificações de disponibilidade da API, autenticação e permissões passaram. No teste de concorrência, as verificações internas também confirmaram que, perante duas propostas simultâneas de 105 € sobre um leilão de 100 €, **uma foi aceite e outra recusada**, mantendo o valor final e o histórico consistentes.
+
+Numa rajada de dez propostas concorrentes, quatro foram aceites e seis recusadas, sem divergências entre o histórico, o contador e o valor final do leilão.
+
+No entanto, o sétimo teste terminou com um **timeout ao aguardar o evento Socket.io `terminado`**. Assim, essa execução não permite considerar como aprovada toda a validação automatizada do encerramento e das notificações, apesar dos resultados positivos obtidos nas verificações de concorrência e persistência.
+
+```text
+Tests: 7
+Pass: 6
+Fail: 1
+Erro: Não chegou o evento terminado
+```
+
+Os detalhes da execução e das verificações manuais estão documentados em `docs/relatorio.md`.
+
+
 Foi também realizada uma validação manual da aplicação publicada, nomeadamente:
 
 - Consulta de produtos através da API e do Swagger.
+
 - Visualização do catálogo e das imagens armazenadas na Cloud.
+
 - Autenticação e acesso às áreas protegidas.
+
 - Participação em leilões por diferentes compradores.
+
 - Atualização de licitações e histórico.
+
 - Apresentação do resultado do leilão e notificações em tempo real.
 
 Os testes automatizados que criam ou alteram dados devem ser executados num ambiente de testes, evitando alterações indesejadas nos dados de produção.
@@ -412,11 +508,17 @@ Os testes automatizados que criam ou alteram dados devem ser executados num ambi
 A solução encontra-se distribuída por diferentes serviços Cloud.
 
 | Componente | Serviço | Modelo |
+
 |---|---|---|
+
 | Frontend | Azure Static Web Apps | PaaS |
+
 | Backend | Render Web Service | PaaS |
+
 | Base de dados | MongoDB Atlas | DBaaS |
+
 | Imagens | Azure Blob Storage | Serviço gerido de armazenamento |
+
 | CI/CD do frontend | GitHub Actions | Serviço gerido de automação |
 
 ### Frontend
@@ -458,9 +560,13 @@ Inicialmente, foi tentada a publicação do backend no Azure App Service. Contud
 Como melhorias futuras, destacam-se:
 
 - Tornar mais robusta a sincronização visual do encerramento dos leilões.
+
 - Avaliar um serviço de alojamento que mantenha o processamento dos leilões continuamente ativo.
+
 - Aumentar a cobertura dos testes automatizados.
+
 - Melhorar a monitorização e o diagnóstico dos serviços.
+
 - Aperfeiçoar a experiência de utilização em dispositivos móveis.
 
 ## 14. Documentação
@@ -471,11 +577,18 @@ O relatório técnico encontra-se em:
 
 O relatório apresenta as decisões de arquitetura, a implementação, a segurança, o modelo de dados, a consistência dos leilões, o deployment Cloud e as principais dificuldades.
 
-## 15. Autoria
+## 15. Utilização de ferramentas de IA
+
+Foi utilizado o **ChatGPT (OpenAI)** como ferramenta de apoio ao desenvolvimento, nomeadamente na explicação de conceitos, análise de mensagens de erro, configuração dos serviços Cloud, preparação de testes e estruturação e revisão da documentação. As sugestões foram analisadas e integradas de forma crítica, de acordo com as necessidades do projeto, mantendo-se a responsabilidade pela implementação e validação do trabalho.
+
+## 16. Autoria
 
 **Projeto individual — Desenvolvimento Web e para a Cloud**
 
-Mestrado em Engenharia Informática  
-Escola Superior de Tecnologia e Gestão  
-Instituto Politécnico de Viana do Castelo  
+Mestrado em Engenharia Informática
+
+Escola Superior de Tecnologia e Gestão
+
+Instituto Politécnico de Viana do Castelo
+
 Ano letivo 2026/2027
