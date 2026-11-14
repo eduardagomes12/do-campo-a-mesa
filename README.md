@@ -59,17 +59,17 @@ O frontend encontra-se alojado no Azure Static Web Apps e o backend no Render. A
 
 ### Cloud e ferramentas
 
-- Azure Static Web Apps — alojamento do frontend
+- Azure Static Web Apps - alojamento do frontend
 
-- Render — alojamento da API e do servidor Socket.io
+- Render - alojamento da API e do servidor Socket.io
 
-- MongoDB Atlas — base de dados NoSQL
+- MongoDB Atlas - base de dados NoSQL
 
-- Azure Blob Storage — armazenamento das imagens
+- Azure Blob Storage - armazenamento das imagens
 
-- GitHub Actions — integração e publicação contínuas
+- GitHub Actions - integração e publicação contínuas
 
-- Git e GitHub — controlo de versões
+- Git e GitHub - controlo de versões
 
 ## 3. Arquitetura
 
@@ -563,7 +563,7 @@ Foi utilizado o **ChatGPT (OpenAI)** como ferramenta de apoio ao desenvolvimento
 
 ## 16. Autoria
 
-**Projeto individual — Desenvolvimento Web e para a Cloud**
+**Projeto individual - Desenvolvimento Web e para a Cloud**
 
 Mestrado em Engenharia Informática
 
